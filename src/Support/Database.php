@@ -32,7 +32,8 @@ final class Database
             if (self::$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
                 self::$pdo->exec('PRAGMA foreign_keys = ON');
             }
-            if ($isNewSqlite) {
+            // Banco novo ou de uma versão anterior: cria o que falta, sem apagar dados.
+            if ($isNewSqlite || Installer::needsUpgrade(self::$pdo)) {
                 Installer::run(self::$pdo);
             }
         }

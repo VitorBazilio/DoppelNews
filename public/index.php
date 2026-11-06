@@ -10,7 +10,22 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-require dirname(__DIR__) . '/src/bootstrap.php';
+try {
+    require dirname(__DIR__) . '/src/bootstrap.php';
+} catch (Throwable $e) {
+    // Falha antes do site existir (ex.: banco fora do ar ou variáveis erradas na hospedagem).
+    // O motivo completo vai para o log; o visitante vê só um aviso, sem expor dados de conexão.
+    error_log('[Doppel] Falha ao iniciar: ' . $e::class . ': ' . $e->getMessage());
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    $isDatabase = $e instanceof PDOException;
+    echo '<!doctype html><meta charset="utf-8"><title>DoppelNews</title>',
+        '<body style="background:#000;color:#fff;font:16px system-ui;text-align:center;padding:15vh 16px">',
+        '<h1 style="color:#ff550a">DoppelNews está fora do ar</h1><p>',
+        $isDatabase ? 'Não foi possível conectar ao banco de dados.' : 'Ocorreu um erro ao iniciar o site.',
+        ' Tente novamente em instantes.</p></body>';
+    exit;
+}
 
 use Doppel\Controller\Admin;
 use Doppel\Controller\AuthController;

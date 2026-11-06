@@ -78,7 +78,13 @@ final class Installer
             'INSERT INTO news (title, summary, body, category, image, author, featured, published_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
+        // Duas visitas simultâneas podem instalar ao mesmo tempo: pula notícias que já existam.
+        $exists = $pdo->prepare('SELECT 1 FROM news WHERE title = ?');
         foreach (require ROOT . '/database/seed/news.php' as $row) {
+            $exists->execute([$row['title']]);
+            if ($exists->fetchColumn()) {
+                continue;
+            }
             $insert->execute([
                 $row['title'], $row['summary'], $row['body'], $row['category'], $row['image'], $row['author'],
                 $row['featured'] ? 1 : 0, date('Y-m-d H:i:s', strtotime('-' . $row['hours_ago'] . ' hours')),
@@ -89,26 +95,28 @@ final class Installer
     private static function seedRules(PDO $pdo): void
     {
         $rules = require ROOT . '/database/seed/rules.php';
+        // Os nomes das regras são únicos: se outra visita já inseriu o registro, o banco só o ignora.
+        $insert = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? 'INSERT OR IGNORE' : 'INSERT IGNORE';
 
         $class = $pdo->prepare(
-            'INSERT INTO classes (name, hit_die, primary_attr, secondary_attr, spell_slots, simple_weapons,
-             martial_weapons, light_armor, medium_armor, heavy_armor, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            "$insert INTO classes (name, hit_die, primary_attr, secondary_attr, spell_slots, simple_weapons,
+             martial_weapons, light_armor, medium_armor, heavy_armor, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         foreach ($rules['classes'] as $row) {
             $class->execute($row);
         }
 
-        $species = $pdo->prepare('INSERT INTO species (name, bonuses, description) VALUES (?, ?, ?)');
+        $species = $pdo->prepare("$insert INTO species (name, bonuses, description) VALUES (?, ?, ?)");
         foreach ($rules['species'] as [$name, $bonuses, $description]) {
             $species->execute([$name, json_encode($bonuses), $description]);
         }
 
-        $weapon = $pdo->prepare('INSERT INTO weapons (name, damage, category, price, weight, properties) VALUES (?, ?, ?, ?, ?, ?)');
+        $weapon = $pdo->prepare("$insert INTO weapons (name, damage, category, price, weight, properties) VALUES (?, ?, ?, ?, ?, ?)");
         foreach ($rules['weapons'] as $row) {
             $weapon->execute($row);
         }
 
-        $spell = $pdo->prepare('INSERT INTO spells (name, level, school, damage, description) VALUES (?, ?, ?, ?, ?)');
+        $spell = $pdo->prepare("$insert INTO spells (name, level, school, damage, description) VALUES (?, ?, ?, ?, ?)");
         foreach ($rules['spells'] as $row) {
             $spell->execute($row);
         }

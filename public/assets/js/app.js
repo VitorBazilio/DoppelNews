@@ -42,8 +42,9 @@
 
     /* Confirmações e senhas iguais */
     document.addEventListener('submit', (event) => {
-        const form = event.target;
-        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
+        // A confirmação pode estar no formulário inteiro ou só no botão que o enviou.
+        const message = event.submitter?.dataset.confirmClick || event.target.dataset.confirm;
+        if (message && !window.confirm(message)) {
             event.preventDefault();
         }
     });

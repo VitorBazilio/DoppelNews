@@ -10,7 +10,7 @@ final class UserRepository
 {
     public function find(int $id): ?array
     {
-        return $this->fetchOne('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [$id]);
+        return $this->fetchOne('SELECT id, name, email, role, active, created_at FROM users WHERE id = ?', [$id]);
     }
 
     public function findByEmail(string $email): ?array
@@ -30,11 +30,18 @@ final class UserRepository
     public function allWithStats(): array
     {
         return Database::pdo()->query(
-            'SELECT u.id, u.name, u.email, u.role, u.created_at,
+            'SELECT u.id, u.name, u.email, u.role, u.active, u.created_at,
                     (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) AS characters,
                     (SELECT COUNT(*) FROM rooms r WHERE r.master_id = u.id) AS rooms
              FROM users u ORDER BY u.created_at DESC, u.id DESC'
         )->fetchAll();
+    }
+
+    /** O primeiro administrador (o mais antigo) é protegido: ninguém o altera pelo painel. */
+    public function firstAdminId(): ?int
+    {
+        $id = Database::pdo()->query("SELECT MIN(id) FROM users WHERE role = 'admin'")->fetchColumn();
+        return $id === null || $id === false ? null : (int) $id;
     }
 
     public function count(): int
@@ -42,14 +49,21 @@ final class UserRepository
         return (int) Database::pdo()->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
 
-    public function countAdmins(): int
+    public function emailTaken(string $email, int $exceptId): bool
     {
-        return (int) Database::pdo()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
+        return $this->fetchOne('SELECT 1 FROM users WHERE email = ? AND id != ?', [mb_strtolower(trim($email)), $exceptId]) !== null;
     }
 
     public function updateName(int $id, string $name): void
     {
         Database::pdo()->prepare('UPDATE users SET name = ? WHERE id = ?')->execute([$name, $id]);
+    }
+
+    /** Edição feita pelo administrador. */
+    public function updateAccount(int $id, string $name, string $email, string $role): void
+    {
+        Database::pdo()->prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?')
+            ->execute([$name, mb_strtolower(trim($email)), $role, $id]);
     }
 
     public function updatePassword(int $id, string $password): void
@@ -67,6 +81,11 @@ final class UserRepository
     public function setRole(int $id, string $role): void
     {
         Database::pdo()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
+    }
+
+    public function setActive(int $id, bool $active): void
+    {
+        Database::pdo()->prepare('UPDATE users SET active = ? WHERE id = ?')->execute([$active ? 1 : 0, $id]);
     }
 
     /** Remove o usuário; salas, personagens e progresso nas aventuras vão junto. */

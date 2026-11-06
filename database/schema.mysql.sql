@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(10) NOT NULL DEFAULT 'user',
+    active TINYINT(1) NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS news (
@@ -67,7 +68,6 @@ CREATE TABLE IF NOT EXISTS rooms (
 CREATE TABLE IF NOT EXISTS characters (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
-    room_id INT UNSIGNED NOT NULL,
     name VARCHAR(60) NOT NULL,
     species_id INT UNSIGNED NOT NULL,
     class_id INT UNSIGNED NOT NULL,
@@ -83,13 +83,22 @@ CREATE TABLE IF NOT EXISTS characters (
     attr_car TINYINT UNSIGNED NOT NULL,
     score INT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_user_room (user_id, room_id),
-    UNIQUE KEY uq_room_name (room_id, name),
+    UNIQUE KEY uq_user_name (user_id, name),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
     FOREIGN KEY (species_id) REFERENCES species (id),
     FOREIGN KEY (class_id) REFERENCES classes (id),
     FOREIGN KEY (weapon_id) REFERENCES weapons (id)
+) CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS room_members (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    room_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    character_id INT UNSIGNED NOT NULL,
+    joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_room_user (room_id, user_id),
+    FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
 ) CHARSET=utf8mb4;
 CREATE TABLE IF NOT EXISTS messages (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

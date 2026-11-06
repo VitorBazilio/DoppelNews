@@ -14,10 +14,13 @@ final class Auth
     public static function user(): ?array
     {
         if (self::$user === null && isset($_SESSION['user_id'])) {
-            self::$user = (new UserRepository())->find((int) $_SESSION['user_id']);
-            if (self::$user === null) {
-                unset($_SESSION['user_id']); // conta excluída enquanto a sessão estava aberta
+            $user = (new UserRepository())->find((int) $_SESSION['user_id']);
+            if ($user === null || !(int) $user['active']) {
+                // Conta excluída ou desativada enquanto a sessão estava aberta: encerra o acesso.
+                unset($_SESSION['user_id']);
+                return null;
             }
+            self::$user = $user;
         }
         return self::$user;
     }

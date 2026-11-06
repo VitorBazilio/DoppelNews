@@ -1,5 +1,5 @@
 <?php
-/** @var array $user @var array $characters @var array $rooms @var array $runs @var array $stories */
+/** @var array $user @var array $characters @var array $rooms @var array $playing @var array $runs @var array $stories */
 $endingLabel = ['victory' => 'Vitória', 'survived' => 'Sobreviveu', 'defeat' => 'Morreu'];
 ?>
 <div class="container profile">
@@ -18,15 +18,18 @@ $endingLabel = ['victory' => 'Vitória', 'survived' => 'Sobreviveu', 'defeat' =>
 
     <div class="profile-grid">
         <section class="panel accent-green">
-            <h2 class="panel-title">Seus personagens</h2>
+            <div class="toolbar">
+                <h2 class="panel-title">Seus personagens</h2>
+                <a class="btn btn-small" href="<?= url('/personagens/novo') ?>">Criar personagem</a>
+            </div>
             <?php if (!$characters): ?>
-                <p class="muted">Nenhum ainda. <a href="<?= url('/salas') ?>">Escolha uma sala</a> para criar o primeiro.</p>
+                <p class="muted">Nenhum ainda. Crie seu primeiro herói e use-o para entrar nas salas.</p>
             <?php endif; ?>
             <ul class="simple-list">
                 <?php foreach ($characters as $c): ?>
                     <li>
                         <a href="<?= url('/personagens/' . (int) $c['id']) ?>"><?= e($c['name']) ?></a>
-                        <small class="muted"><?= e($c['species_name']) ?> <?= e($c['class_name']) ?> · <a href="<?= url('/salas/' . (int) $c['room_id']) ?>"><?= e($c['room_name']) ?></a> · <?= (int) $c['score'] ?> pts</small>
+                        <small class="muted"><?= e($c['species_name']) ?> <?= e($c['class_name']) ?> · <?= (int) $c['score'] ?> pts · em <?= (int) $c['rooms_count'] ?> sala(s)</small>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -34,6 +37,7 @@ $endingLabel = ['victory' => 'Vitória', 'survived' => 'Sobreviveu', 'defeat' =>
 
         <section class="panel accent-cyan">
             <h2 class="panel-title">Suas salas</h2>
+            <h3 class="list-heading">Como mestre</h3>
             <?php if (!$rooms): ?>
                 <p class="muted">Você ainda não mestrou nenhuma mesa.</p>
             <?php endif; ?>
@@ -42,7 +46,19 @@ $endingLabel = ['victory' => 'Vitória', 'survived' => 'Sobreviveu', 'defeat' =>
                     <li><a href="<?= url('/salas/' . (int) $r['id']) ?>"><?= e($r['name']) ?></a> <small class="muted"><?= (int) $r['players'] ?>/<?= (int) $r['max_players'] ?> jogadores</small></li>
                 <?php endforeach; ?>
             </ul>
-            <a class="btn btn-outline" href="<?= url('/salas/nova') ?>">Criar sala</a>
+            <h3 class="list-heading">Como jogador</h3>
+            <?php if (!$playing): ?>
+                <p class="muted">Você ainda não entrou em nenhuma sala.</p>
+            <?php endif; ?>
+            <ul class="simple-list">
+                <?php foreach ($playing as $r): ?>
+                    <li><a href="<?= url('/salas/' . (int) $r['id']) ?>"><?= e($r['name']) ?></a> <small class="muted">mestre <?= e($r['master_name']) ?></small></li>
+                <?php endforeach; ?>
+            </ul>
+            <div class="form-actions">
+                <a class="btn btn-outline" href="<?= url('/salas/nova') ?>">Criar sala</a>
+                <a class="btn btn-ghost" href="<?= url('/salas') ?>">Procurar salas</a>
+            </div>
         </section>
 
         <section class="panel accent-purple">

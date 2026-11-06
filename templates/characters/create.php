@@ -1,5 +1,5 @@
 <?php
-/** @var array $room @var array $species @var array $classes @var array $weapons */
+/** @var int $roomId sala para onde voltar depois (0 = nenhuma) @var array $species @var array $classes @var array $weapons */
 use Doppel\Rpg\CharacterRules;
 
 $rules = [
@@ -14,12 +14,13 @@ $rules = [
 ?>
 <section class="container narrow-wide">
     <div class="panel accent-green">
-        <p class="eyebrow pixel">Sala <?= e($room['name']) ?> · mestre <?= e($room['master_name']) ?></p>
+        <p class="eyebrow pixel">Seus heróis</p>
         <h1 class="panel-title">Criar personagem</h1>
-        <p class="muted">Escolha espécie, classe e arma, e distribua <?= CharacterRules::BUDGET ?> pontos entre os atributos (de <?= CharacterRules::BASE ?> a <?= CharacterRules::MAX_BUY ?>, antes dos bônus da espécie). Os valores 14 e 15 custam mais caro, como no Livro do Jogador.</p>
+        <p class="muted">O personagem fica na sua conta e pode entrar em qualquer sala. Escolha espécie, classe e arma, e distribua <?= CharacterRules::BUDGET ?> pontos entre os atributos (de <?= CharacterRules::BASE ?> a <?= CharacterRules::MAX_BUY ?>, antes dos bônus da espécie). Os valores 14 e 15 custam mais caro, como no Livro do Jogador.</p>
 
-        <form class="form character-form" method="post" action="<?= url('/salas/' . (int) $room['id'] . '/personagem') ?>" data-point-buy>
+        <form class="form character-form" method="post" action="<?= url('/personagens') ?>" data-point-buy>
             <?= csrf_field() ?>
+            <?php if ($roomId): ?><input type="hidden" name="sala" value="<?= $roomId ?>"><?php endif; ?>
             <script type="application/json" data-rules><?= json_encode($rules, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE) ?></script>
 
             <label>Nome do personagem<input name="name" value="<?= e(old('name')) ?>" required minlength="2" maxlength="60" autofocus></label>
@@ -73,7 +74,7 @@ $rules = [
 
             <div class="form-actions">
                 <button class="btn" type="submit">Criar personagem</button>
-                <a class="btn btn-ghost" href="<?= url('/salas') ?>">Voltar às salas</a>
+                <a class="btn btn-ghost" href="<?= url($roomId ? "/salas/$roomId/entrar" : '/personagens?aba=meus') ?>">Cancelar</a>
             </div>
         </form>
     </div>

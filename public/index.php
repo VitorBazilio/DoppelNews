@@ -53,11 +53,15 @@ $router->get('/salas/{id}/mensagens', [RoomController::class, 'messages']);
 $router->post('/salas/{id}/mensagens', [RoomController::class, 'send']);
 $router->post('/salas/{id}/pontos', [RoomController::class, 'award']);
 $router->post('/salas/{id}/excluir', [RoomController::class, 'destroy']);
-$router->get('/salas/{id}/personagem', [CharacterController::class, 'create']);
-$router->post('/salas/{id}/personagem', [CharacterController::class, 'store']);
+$router->get('/salas/{id}/entrar', [RoomController::class, 'enterForm']);
+$router->post('/salas/{id}/entrar', [RoomController::class, 'enter']);
+$router->post('/salas/{id}/sair', [RoomController::class, 'leave']);
+$router->post('/salas/{id}/remover', [RoomController::class, 'kick']);
 
 // Personagens e regras
 $router->get('/personagens', [CharacterController::class, 'index']);
+$router->get('/personagens/novo', [CharacterController::class, 'create']);
+$router->post('/personagens', [CharacterController::class, 'store']);
 $router->get('/personagens/{id}', [CharacterController::class, 'show']);
 $router->post('/personagens/{id}/excluir', [CharacterController::class, 'destroy']);
 $router->get('/regras', [PageController::class, 'rules']);
@@ -91,7 +95,9 @@ $router->get('/admin/noticias/{id}/editar', [Admin\NewsController::class, 'edit'
 $router->post('/admin/noticias/{id}', [Admin\NewsController::class, 'update']);
 $router->post('/admin/noticias/{id}/excluir', [Admin\NewsController::class, 'destroy']);
 $router->get('/admin/usuarios', [Admin\UserController::class, 'index']);
-$router->post('/admin/usuarios/{id}/papel', [Admin\UserController::class, 'role']);
+$router->get('/admin/usuarios/{id}/editar', [Admin\UserController::class, 'edit']);
+$router->post('/admin/usuarios/{id}', [Admin\UserController::class, 'update']);
+$router->post('/admin/usuarios/{id}/status', [Admin\UserController::class, 'status']);
 $router->post('/admin/usuarios/{id}/excluir', [Admin\UserController::class, 'destroy']);
 $router->get('/admin/regras', [Admin\RulesController::class, 'index']);
 $router->post('/admin/regras/{type}', [Admin\RulesController::class, 'store']);

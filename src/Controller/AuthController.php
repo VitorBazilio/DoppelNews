@@ -38,6 +38,10 @@ final class AuthController
             flash('error', 'E-mail ou senha inválidos.');
             redirect('/entrar');
         }
+        if (!(int) $user['active']) {
+            flash('error', 'Esta conta está desativada. Fale com a equipe pelo e-mail da página Ajuda.');
+            redirect('/entrar');
+        }
 
         unset($_SESSION['login_failures'], $_SESSION['login_last_failure'], $_SESSION['old']);
         Auth::adoptGuestProgress((int) $user['id']);

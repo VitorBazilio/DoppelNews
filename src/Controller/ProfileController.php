@@ -17,10 +17,12 @@ final class ProfileController
     public function show(): void
     {
         $user = Auth::requireUser();
+        $rooms = new RoomRepository();
         View::render('profile/show', [
             'user' => $user,
             'characters' => (new CharacterRepository())->forUser((int) $user['id']),
-            'rooms' => (new RoomRepository())->forMaster((int) $user['id']),
+            'rooms' => $rooms->forMaster((int) $user['id']),
+            'playing' => $rooms->forPlayer((int) $user['id']),
             'runs' => (new RunRepository())->allFor(Auth::ownerKey()),
             'stories' => StoryLibrary::all(),
         ], 'Meu perfil');

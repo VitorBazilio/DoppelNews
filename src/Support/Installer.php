@@ -12,23 +12,19 @@ final class Installer
     /** Verdadeiro se o banco ainda não tem o esquema atual (banco novo ou de uma versão anterior). */
     public static function needsUpgrade(PDO $pdo): bool
     {
-        try {
-            $pdo->query('SELECT featured, author FROM news WHERE 1 = 0');
-            $pdo->query('SELECT 1 FROM characters WHERE 1 = 0');
-            return false;
-        } catch (\PDOException) {
-            return true;
-        }
+        return !self::canQuery($pdo, 'SELECT featured, author FROM news WHERE 1 = 0')
+            || !self::canQuery($pdo, 'SELECT active FROM users WHERE 1 = 0')
+            || !self::canQuery($pdo, 'SELECT 1 FROM room_members WHERE 1 = 0')
+            || self::canQuery($pdo, 'SELECT room_id FROM characters WHERE 1 = 0');
     }
 
     public static function run(PDO $pdo): void
     {
-        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-        $schema = file_get_contents(ROOT . "/database/schema.$driver.sql");
-        foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
-            $pdo->exec($statement);
-        }
-        self::upgradeNewsTable($pdo);
+        $oldCharacters = self::takeOldCharacters($pdo);
+        self::runSchema($pdo);
+        self::addMissingColumns($pdo);
+        self::restoreOldCharacters($pdo, $oldCharacters);
+        self::renameSampleImages($pdo);
 
         if (self::isEmpty($pdo, 'news')) {
             self::seedNews($pdo);
@@ -38,21 +34,80 @@ final class Installer
         }
     }
 
-    /** Bancos da versão anterior do DoppelNews não têm assinatura nem destaque nas notícias. */
-    private static function upgradeNewsTable(PDO $pdo): void
+    private static function runSchema(PDO $pdo): void
+    {
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $schema = file_get_contents(ROOT . "/database/schema.$driver.sql");
+        foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
+            $pdo->exec($statement);
+        }
+    }
+
+    private static function canQuery(PDO $pdo, string $sql): bool
+    {
+        try {
+            $pdo->query($sql);
+            return true;
+        } catch (\PDOException) {
+            return false;
+        }
+    }
+
+    /** Colunas que bancos de versões anteriores não têm. */
+    private static function addMissingColumns(PDO $pdo): void
     {
         $columns = [
-            'author' => "VARCHAR(80) NOT NULL DEFAULT 'Equipe Doppel'",
-            'featured' => 'INTEGER NOT NULL DEFAULT 0',
+            ['news', 'author', "VARCHAR(80) NOT NULL DEFAULT 'Equipe Doppel'"],
+            ['news', 'featured', 'INTEGER NOT NULL DEFAULT 0'],
+            ['users', 'active', 'INTEGER NOT NULL DEFAULT 1'],
         ];
-        foreach ($columns as $column => $definition) {
-            try {
-                $pdo->query("SELECT $column FROM news WHERE 1 = 0");
-            } catch (\PDOException) {
-                $pdo->exec("ALTER TABLE news ADD COLUMN $column $definition");
+        foreach ($columns as [$table, $column, $definition]) {
+            if (!self::canQuery($pdo, "SELECT $column FROM $table WHERE 1 = 0")) {
+                $pdo->exec("ALTER TABLE $table ADD COLUMN $column $definition");
             }
         }
+    }
 
+    /**
+     * Na versão anterior cada ficha pertencia a uma sala (characters.room_id). Agora a ficha é do
+     * usuário e a participação fica em room_members. Guarda as fichas antigas e remove a tabela velha.
+     */
+    private static function takeOldCharacters(PDO $pdo): array
+    {
+        if (!self::canQuery($pdo, 'SELECT room_id FROM characters WHERE 1 = 0')) {
+            return [];
+        }
+        $rows = $pdo->query('SELECT * FROM characters ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+        $pdo->exec('DROP TABLE characters');
+        return $rows;
+    }
+
+    /** Recria as fichas antigas no formato novo e põe cada uma de volta na sala em que estava. */
+    private static function restoreOldCharacters(PDO $pdo, array $rows): void
+    {
+        $columns = ['id', 'user_id', 'name', 'species_id', 'class_id', 'weapon_id', 'level', 'hp', 'spell_slots',
+            'attr_for', 'attr_des', 'attr_con', 'attr_int', 'attr_sab', 'attr_car', 'score', 'created_at'];
+        $insert = $pdo->prepare('INSERT INTO characters (' . implode(', ', $columns) . ') VALUES ('
+            . implode(', ', array_fill(0, count($columns), '?')) . ')');
+        $member = $pdo->prepare('INSERT INTO room_members (room_id, user_id, character_id, joined_at) VALUES (?, ?, ?, ?)');
+
+        $usedNames = [];
+        foreach ($rows as $row) {
+            // O mesmo usuário podia ter fichas com o mesmo nome em salas diferentes.
+            $name = $row['name'];
+            for ($n = 2; isset($usedNames[$row['user_id']][mb_strtolower($name)]); $n++) {
+                $name = $row['name'] . " ($n)";
+            }
+            $usedNames[$row['user_id']][mb_strtolower($name)] = true;
+            $row['name'] = $name;
+
+            $insert->execute(array_map(static fn (string $c) => $row[$c], $columns));
+            $member->execute([$row['room_id'], $row['user_id'], $row['id'], $row['created_at']]);
+        }
+    }
+
+    private static function renameSampleImages(PDO $pdo): void
+    {
         // As imagens de exemplo foram renomeadas e convertidas para WebP.
         $renamed = [
             'cp.jpg' => 'banner-cyberpunk.webp', 'god2.jpg' => 'banner-god-of-war.webp', 'zel.jpg' => 'banner-zelda.webp',

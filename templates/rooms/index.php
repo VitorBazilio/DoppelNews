@@ -4,7 +4,7 @@ use Doppel\Repository\RoomRepository;
 ?>
 <?= Doppel\Support\View::partial('partials/page-hero', [
     'title' => 'Salas',
-    'subtitle' => 'Mesas de RPG abertas. Entre, crie seu personagem e role os dados com o grupo.',
+    'subtitle' => 'Mesas de RPG abertas. Entre com um dos seus personagens e role os dados com o grupo.',
     'image' => 'banner-dnd.webp',
     'accent' => 'cyan',
 ]) ?>

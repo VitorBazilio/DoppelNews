@@ -8,7 +8,7 @@ $books = [
 ];
 $faq = [
     'Preciso de conta para usar o site?' => 'Para ler as notícias, não. Para entrar em salas, criar personagens, jogar as Aventuras e acompanhar o ranking, sim: é grátis e leva um minuto.',
-    'Como entro em uma sala?' => 'Abra a página Salas, escolha uma mesa com vaga (ou clique em Sorte) e crie seu personagem. Cada personagem pertence a uma sala, e você pode ter um por sala.',
+    'Como entro em uma sala?' => 'Crie seus personagens em Personagens (ou no seu perfil). Depois abra Salas, escolha uma mesa com vaga (ou clique em Sorte) e entre com um deles. O mesmo personagem pode jogar em várias salas, e você pode sair de uma sala quando quiser.',
     'Como crio minha própria mesa?' => 'Em Salas, clique em Criar sala. Você vira o mestre: não precisa de personagem, conversa como "Mestre" no chat e pode dar pontos de ranking aos jogadores.',
     'Como funciona o ranking?' => 'O mestre de cada sala dá (ou tira) pontos dos personagens pelo desempenho nas sessões. Os 10 mais pontuados aparecem em Personagens › Melhores.',
     'Qual a diferença entre Salas e Aventuras?' => 'As Salas são mesas com outras pessoas e um mestre. As Aventuras são livros-jogo para jogar sozinho, com escolhas e testes de dados decididos pelo próprio site.',

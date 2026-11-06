@@ -1,5 +1,5 @@
 <?php
-/** @var array $character @var array $attributes @var array $skills @var bool $canDelete */
+/** @var array $character @var array $attributes @var array $skills @var array $rooms @var bool $canDelete */
 use Doppel\Rpg\CharacterRules;
 ?>
 <section class="container narrow-wide">
@@ -38,15 +38,22 @@ use Doppel\Rpg\CharacterRules;
                 <?php else: ?>
                     <p class="muted">Nenhuma arma.</p>
                 <?php endif; ?>
-                <h2>Sala</h2>
-                <p><a href="<?= url('/salas/' . (int) $character['room_id']) ?>"><?= e($character['room_name']) ?></a></p>
+                <h2>Salas</h2>
+                <?php if (!$rooms): ?>
+                    <p class="muted">Ainda não entrou em nenhuma sala.</p>
+                <?php endif; ?>
+                <ul class="simple-list">
+                    <?php foreach ($rooms as $room): ?>
+                        <li><a href="<?= url('/salas/' . (int) $room['id']) ?>"><?= e($room['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
                 <p class="muted small">Criado em <?= e(date_long($character['created_at'], false)) ?>. Iniciativa <?= signed(CharacterRules::modifier($attributes['des'])) ?>.</p>
             </div>
         </div>
 
         <?php if ($canDelete): ?>
-            <form method="post" action="<?= url('/personagens/' . (int) $character['id'] . '/excluir') ?>" data-confirm="Remover <?= e($character['name']) ?> da sala?">
-                <?= csrf_field() ?><button class="link-button danger" type="submit">Remover personagem</button>
+            <form method="post" action="<?= url('/personagens/' . (int) $character['id'] . '/excluir') ?>" data-confirm="Apagar <?= e($character['name']) ?>? A ficha sai de todas as salas.">
+                <?= csrf_field() ?><button class="link-button danger" type="submit">Apagar personagem</button>
             </form>
         <?php endif; ?>
     </div>

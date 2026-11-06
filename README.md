@@ -11,13 +11,13 @@ Visitantes veem o portal de notícias (menu **News, Games, Animes e Ajuda**). Sa
 | Área | Funções |
 |---|---|
 | **News** | Carrossel de destaques, editorias (Games, Anime, Hqs, Manga, RPG, História), busca, paginação, página da notícia com posts recentes e compartilhamento |
-| **Salas** | Criar mesa (você vira o mestre), listar por Novas/Populares/Mestres, Sorte (sala aleatória com vaga), chat em tempo real, rolagem de dados (`d20`, `2d6+3`, `/r 1d8-1`), mestre dá pontos de ranking |
-| **Personagens** | Criação por sala com compra de pontos (27 pontos, regras do Livro do Jogador), bônus de espécie, PV pelo dado de vida, perícias; ranking, recentes, meus e ficha de exemplo |
+| **Salas** | Quem cria a sala é o mestre; os jogadores entram escolhendo um dos seus personagens. Novas/Populares/Mestres, Sorte (sala aleatória com vaga), chat em tempo real, rolagem de dados (`d20`, `2d6+3`, `/r 1d8-1`); o mestre dá pontos e remove jogadores, e o jogador pode sair |
+| **Personagens** | Criados no perfil do usuário (não dependem de sala) com compra de pontos (27 pontos, regras do Livro do Jogador), bônus de espécie, PV pelo dado de vida, perícias; o mesmo herói joga em várias salas; ranking, recentes, meus e ficha de exemplo |
 | **Regras** | Compêndio de classes, espécies, armas e magias |
 | **Aventuras** | Livros-jogo históricos (Somme 1916, Idos de Março) com testes de 2d6 |
 | **Ajuda** | Livros de D&D em PDF, como jogar, perguntas frequentes e contato |
 | **Conta** | Cadastro/login (modal ou página), perfil com personagens, salas e aventuras; troca de nick e senha |
-| **Painel** (admin) | Notícias (criar, editar, excluir, destaque no carrossel, upload convertido para WebP), usuários (promover/excluir) e regras de D&D |
+| **Painel** (admin) | Notícias (criar, editar, excluir, destaque no carrossel, upload convertido para WebP), usuários (editar nick, e-mail e papel, desativar/reativar e apagar; a própria conta e a do primeiro administrador ficam protegidas) e regras de D&D |
 
 ## Rodando localmente (Windows)
 

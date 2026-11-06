@@ -76,7 +76,7 @@ final class RoomController
 
         unset($_SESSION['old']);
         $id = $this->rooms->create($name, $description, (int) $user['id'], $maxPlayers);
-        (new MessageRepository())->add($id, null, 'Doppel', "Sala criada por {$user['name']}. Que comece a aventura!", 'system');
+        $this->system($id, "Sala criada por {$user['name']}. Que comece a aventura!");
         flash('success', 'Sala criada! Você é o mestre. Compartilhe o link com seus jogadores.');
         redirect("/salas/$id");
     }
@@ -88,12 +88,7 @@ final class RoomController
         $access = $this->access($room, $user);
 
         if ($access['role'] === null) {
-            if ((int) $room['players'] >= (int) $room['max_players']) {
-                flash('error', 'Esta sala está cheia.');
-                redirect('/salas');
-            }
-            flash('info', 'Crie seu personagem para entrar na sala "' . $room['name'] . '".');
-            redirect("/salas/{$room['id']}/personagem");
+            redirect("/salas/{$room['id']}/entrar");
         }
 
         $character = $access['character'];
@@ -105,6 +100,63 @@ final class RoomController
             'players' => $this->characters->forRoom((int) $room['id']),
             'messages' => (new MessageRepository())->since((int) $room['id']),
         ], $room['name']);
+    }
+
+    /** Tela para escolher com qual dos seus personagens o usuário entra na sala. */
+    public function enterForm(string $id): void
+    {
+        $user = Auth::requireUser();
+        $room = $this->joinableRoom($id, $user);
+        View::render('rooms/enter', [
+            'room' => $room,
+            'characters' => $this->characters->forUser((int) $user['id']),
+        ], 'Entrar em ' . $room['name']);
+    }
+
+    public function enter(string $id): void
+    {
+        $user = Auth::requireUser();
+        $room = $this->joinableRoom($id, $user);
+        $character = $this->characters->find(input_int('character_id'));
+        if ($character === null || (int) $character['user_id'] !== (int) $user['id']) {
+            flash('error', 'Escolha um dos seus personagens.');
+            redirect("/salas/{$room['id']}/entrar");
+        }
+
+        $this->rooms->join((int) $room['id'], (int) $user['id'], (int) $character['id']);
+        $this->system((int) $room['id'], "{$character['name']} ({$character['species_name']} {$character['class_name']}) entrou na sala.");
+        flash('success', "{$character['name']} entrou na sala. Boa aventura!");
+        redirect("/salas/{$room['id']}");
+    }
+
+    /** O jogador sai da sala; a ficha continua com ele. */
+    public function leave(string $id): void
+    {
+        $user = Auth::requireUser();
+        $room = $this->room($id);
+        $access = $this->access($room, $user);
+        if ($access['role'] === 'player') {
+            $this->rooms->leave((int) $room['id'], (int) $user['id']);
+            $this->system((int) $room['id'], "{$access['character']['name']} saiu da sala.");
+            flash('success', 'Você saiu da sala "' . $room['name'] . '".');
+        }
+        redirect('/salas');
+    }
+
+    /** O mestre (ou um admin) remove um jogador da mesa. */
+    public function kick(string $id): void
+    {
+        $user = Auth::requireUser();
+        $room = $this->room($id);
+        $this->requireMaster($room, $user);
+
+        $character = $this->characters->find(input_int('character_id'));
+        if ($character !== null && $this->rooms->isCharacterInRoom((int) $room['id'], (int) $character['id'])) {
+            $this->rooms->leave((int) $room['id'], (int) $character['user_id']);
+            $this->system((int) $room['id'], "{$character['name']} foi removido da sala pelo mestre.");
+            flash('success', "{$character['name']} foi removido da sala.");
+        }
+        redirect("/salas/{$room['id']}");
     }
 
     /** JSON com as mensagens novas (o chat consulta a cada poucos segundos). */
@@ -153,20 +205,18 @@ final class RoomController
     {
         $user = Auth::requireUser();
         $room = $this->room($id);
-        if ($this->access($room, $user)['role'] !== 'master' && !Auth::isAdmin()) {
-            View::forbidden('Só o mestre da sala pode dar pontos.');
-        }
+        $this->requireMaster($room, $user);
 
         $character = $this->characters->find(input_int('character_id'));
         $delta = input_int('points');
-        if ($character === null || (int) $character['room_id'] !== (int) $room['id']) {
+        if ($character === null || !$this->rooms->isCharacterInRoom((int) $room['id'], (int) $character['id'])) {
             flash('error', 'Personagem não encontrado nesta sala.');
         } elseif ($delta === 0 || abs($delta) > self::MAX_AWARD) {
             flash('error', 'Use de -' . self::MAX_AWARD . ' a +' . self::MAX_AWARD . ' pontos por vez.');
         } else {
             $this->characters->addScore((int) $character['id'], $delta);
             $text = sprintf('O mestre %s %d ponto%s %s %s.', $delta > 0 ? 'deu' : 'tirou', abs($delta), abs($delta) === 1 ? '' : 's', $delta > 0 ? 'para' : 'de', $character['name']);
-            (new MessageRepository())->add((int) $room['id'], null, 'Doppel', $text, 'system');
+            $this->system((int) $room['id'], $text);
             flash('success', $text);
         }
         redirect("/salas/{$room['id']}");
@@ -176,9 +226,7 @@ final class RoomController
     {
         $user = Auth::requireUser();
         $room = $this->room($id);
-        if ((int) $room['master_id'] !== (int) $user['id'] && !Auth::isAdmin()) {
-            View::forbidden('Só o mestre da sala pode excluí-la.');
-        }
+        $this->requireMaster($room, $user);
         $this->rooms->delete((int) $room['id']);
         flash('success', 'Sala "' . $room['name'] . '" excluída.');
         redirect('/salas');
@@ -193,11 +241,39 @@ final class RoomController
         if ((int) $room['master_id'] === (int) $user['id']) {
             return ['role' => 'master', 'character' => null];
         }
-        $character = $this->characters->findForUserInRoom((int) $user['id'], (int) $room['id']);
-        if ($character !== null) {
-            return ['role' => 'player', 'character' => $character];
+        $membership = $this->rooms->membership((int) $room['id'], (int) $user['id']);
+        if ($membership !== null) {
+            return ['role' => 'player', 'character' => $this->characters->find((int) $membership['character_id'])];
         }
         return ['role' => $user['role'] === 'admin' ? 'admin' : null, 'character' => null];
+    }
+
+    /** Só o mestre da sala (ou um administrador) gerencia a mesa. */
+    private function requireMaster(array $room, array $user): void
+    {
+        if ((int) $room['master_id'] !== (int) $user['id'] && !Auth::isAdmin()) {
+            View::forbidden('Só o mestre da sala pode fazer isso.');
+        }
+    }
+
+    /** Sala em que o usuário ainda pode entrar como jogador (senão, redireciona com o motivo). */
+    private function joinableRoom(string $id, array $user): array
+    {
+        $room = $this->room($id);
+        $access = $this->access($room, $user);
+        if ($access['role'] === 'master' || $access['role'] === 'player') {
+            redirect("/salas/{$room['id']}");
+        }
+        if ((int) $room['players'] >= (int) $room['max_players']) {
+            flash('error', 'Esta sala está cheia.');
+            redirect('/salas');
+        }
+        return $room;
+    }
+
+    private function system(int $roomId, string $text): void
+    {
+        (new MessageRepository())->add($roomId, null, 'Doppel', $text, 'system');
     }
 
     private function room(string $id): array

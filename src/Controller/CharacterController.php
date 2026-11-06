@@ -5,39 +5,37 @@ declare(strict_types=1);
 namespace Doppel\Controller;
 
 use Doppel\Repository\CharacterRepository;
-use Doppel\Repository\MessageRepository;
-use Doppel\Repository\RoomRepository;
 use Doppel\Repository\RulesRepository;
 use Doppel\Rpg\CharacterRules;
 use Doppel\Support\Auth;
 use Doppel\Support\View;
 
-/** Personagens de D&D: galeria, ranking, ficha e criação (um por sala). */
+/** Personagens de D&D: cada usuário cria os seus e escolhe um deles para entrar numa sala. */
 final class CharacterController
 {
-    public const TABS = ['ranking' => 'Melhores', 'recentes' => 'Recentes', 'meus' => 'Meus', 'exemplo' => 'Exemplo'];
+    public const TABS = ['meus' => 'Meus', 'ranking' => 'Melhores', 'recentes' => 'Recentes', 'exemplo' => 'Exemplo'];
 
     private CharacterRepository $characters;
+    private array $user;
 
     /** Toda a área de personagens é exclusiva de quem está logado. */
     public function __construct()
     {
-        Auth::requireUser();
+        $this->user = Auth::requireUser();
         $this->characters = new CharacterRepository();
     }
 
     public function index(): void
     {
-        $tab = $_GET['aba'] ?? 'ranking';
+        $tab = $_GET['aba'] ?? 'meus';
         if (!isset(self::TABS[$tab])) {
-            $tab = 'ranking';
+            $tab = 'meus';
         }
-
         $list = match ($tab) {
-            'meus' => $this->characters->forUser((int) Auth::id()),
+            'meus' => $this->characters->forUser((int) $this->user['id']),
             'recentes' => $this->characters->recent(),
+            'ranking' => $this->characters->ranking(),
             'exemplo' => [],
-            default => $this->characters->ranking(),
         };
         View::render('characters/index', ['tab' => $tab, 'characters' => $list], 'Personagens');
     }
@@ -46,36 +44,30 @@ final class CharacterController
     {
         $character = $this->characters->find((int) $id) ?? View::notFound();
         $attributes = CharacterRepository::attributes($character);
-        $userId = Auth::id();
 
         View::render('characters/show', [
             'character' => $character,
             'attributes' => $attributes,
             'skills' => CharacterRules::skills($attributes),
-            'canDelete' => $userId !== null && ((int) $character['user_id'] === $userId || Auth::isAdmin()),
+            'rooms' => $this->characters->roomsOf((int) $character['id']),
+            'canDelete' => (int) $character['user_id'] === (int) $this->user['id'] || Auth::isAdmin(),
         ], $character['name']);
     }
 
-    public function create(string $id): void
+    public function create(): void
     {
-        $user = Auth::requireUser();
-        $room = $this->joinableRoom($id, $user);
         $rules = new RulesRepository();
-
         View::render('characters/create', [
-            'room' => $room,
+            'roomId' => $this->returnRoomId(),
             'species' => $rules->all('especies'),
             'classes' => $rules->all('classes'),
             'weapons' => $rules->all('armas'),
         ], 'Criar personagem');
     }
 
-    public function store(string $id): void
+    public function store(): void
     {
-        $user = Auth::requireUser();
-        $room = $this->joinableRoom($id, $user);
         $rules = new RulesRepository();
-
         $name = input('name');
         $base = [];
         foreach (array_keys(ATTRIBUTES) as $attr) {
@@ -89,23 +81,23 @@ final class CharacterController
 
         $error = match (true) {
             mb_strlen($name) < 2 || mb_strlen($name) > 60 => 'O nome do personagem deve ter entre 2 e 60 caracteres.',
-            $this->characters->nameTakenInRoom((int) $room['id'], $name) => 'Já existe um personagem com esse nome nesta sala.',
+            $this->characters->nameTakenByUser((int) $this->user['id'], $name) => 'Você já tem um personagem com esse nome.',
             $species === null => 'Escolha uma espécie.',
             $class === null => 'Escolha uma classe.',
             $weapon === null => 'Escolha uma arma.',
             !$this->canWield($class, $weapon) => "A classe {$class['name']} não sabe usar armas marciais. Escolha uma arma simples.",
             default => CharacterRules::validatePointBuy($base),
         };
+        $roomId = $this->returnRoomId();
         if ($error !== null) {
             flash('error', $error);
-            redirect("/salas/{$room['id']}/personagem");
+            redirect('/personagens/novo' . ($roomId ? "?sala=$roomId" : ''));
         }
 
         unset($_SESSION['old']);
         $attributes = CharacterRules::applyBonuses($base, $species['bonuses']);
-        $this->characters->create([
-            'user_id' => (int) $user['id'],
-            'room_id' => (int) $room['id'],
+        $id = $this->characters->create([
+            'user_id' => (int) $this->user['id'],
             'name' => $name,
             'species_id' => (int) $species['id'],
             'class_id' => (int) $class['id'],
@@ -114,44 +106,27 @@ final class CharacterController
             'spell_slots' => (int) $class['spell_slots'],
             'attributes' => $attributes,
         ]);
-        (new MessageRepository())->add((int) $room['id'], null, 'Doppel', "$name ({$species['name']} {$class['name']}) entrou na sala.", 'system');
-        flash('success', "Personagem $name criado. Boa aventura!");
-        redirect("/salas/{$room['id']}");
+        flash('success', "Personagem $name criado!");
+        // Veio de uma sala? Volta para escolher o personagem e entrar nela.
+        redirect($roomId ? "/salas/$roomId/entrar" : "/personagens/$id");
     }
 
-    /** O dono, o mestre da sala ou um admin podem remover um personagem. */
+    /** Só o dono ou um administrador apagam a ficha (ela sai de todas as salas). */
     public function destroy(string $id): void
     {
-        $user = Auth::requireUser();
         $character = $this->characters->find((int) $id) ?? View::notFound();
-        $room = (new RoomRepository())->find((int) $character['room_id']);
-        $isOwner = (int) $character['user_id'] === (int) $user['id'];
-        $isMaster = $room !== null && (int) $room['master_id'] === (int) $user['id'];
-        if (!$isOwner && !$isMaster && !Auth::isAdmin()) {
-            View::forbidden('Você não pode remover este personagem.');
+        if ((int) $character['user_id'] !== (int) $this->user['id'] && !Auth::isAdmin()) {
+            View::forbidden('Você não pode apagar este personagem.');
         }
-
         $this->characters->delete((int) $character['id']);
-        (new MessageRepository())->add((int) $character['room_id'], null, 'Doppel', "{$character['name']} saiu da sala.", 'system');
-        flash('success', "{$character['name']} foi removido.");
-        $isOwner ? redirect('/personagens?aba=meus') : redirect("/salas/{$character['room_id']}");
+        flash('success', "{$character['name']} foi apagado.");
+        redirect('/personagens?aba=meus');
     }
 
-    private function joinableRoom(string $roomId, array $user): array
+    /** Sala para onde voltar depois de criar o personagem (?sala= no link ou campo do formulário). */
+    private function returnRoomId(): int
     {
-        $room = (new RoomRepository())->find((int) $roomId) ?? View::notFound();
-        if ((int) $room['master_id'] === (int) $user['id']) {
-            flash('info', 'Você é o mestre desta sala e não precisa de personagem.');
-            redirect("/salas/{$room['id']}");
-        }
-        if ($this->characters->findForUserInRoom((int) $user['id'], (int) $room['id']) !== null) {
-            redirect("/salas/{$room['id']}");
-        }
-        if ((int) $room['players'] >= (int) $room['max_players']) {
-            flash('error', 'Esta sala está cheia.');
-            redirect('/salas');
-        }
-        return $room;
+        return max(0, (int) ($_POST['sala'] ?? $_GET['sala'] ?? 0));
     }
 
     private function canWield(array $class, array $weapon): bool

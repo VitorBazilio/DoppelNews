@@ -6,17 +6,17 @@ namespace Doppel\Repository;
 
 use Doppel\Support\Database;
 
-/** Personagens de D&D. Cada usuário pode ter um personagem por sala. */
+/** Personagens de D&D. Cada ficha pertence a um usuário e pode jogar em várias salas. */
 final class CharacterRepository
 {
     private const SELECT = 'SELECT ch.*, s.name AS species_name, cl.name AS class_name, cl.hit_die,
             w.name AS weapon_name, w.damage AS weapon_damage, w.properties AS weapon_properties,
-            r.name AS room_name, u.name AS player_name
+            u.name AS player_name,
+            (SELECT COUNT(*) FROM room_members m WHERE m.character_id = ch.id) AS rooms_count
         FROM characters ch
         JOIN species s ON s.id = ch.species_id
         JOIN classes cl ON cl.id = ch.class_id
         LEFT JOIN weapons w ON w.id = ch.weapon_id
-        JOIN rooms r ON r.id = ch.room_id
         JOIN users u ON u.id = ch.user_id';
 
     public function find(int $id): ?array
@@ -24,19 +24,18 @@ final class CharacterRepository
         return $this->one(self::SELECT . ' WHERE ch.id = ?', [$id]);
     }
 
-    public function findForUserInRoom(int $userId, int $roomId): ?array
-    {
-        return $this->one(self::SELECT . ' WHERE ch.user_id = ? AND ch.room_id = ?', [$userId, $roomId]);
-    }
-
-    public function forRoom(int $roomId): array
-    {
-        return $this->many(self::SELECT . ' WHERE ch.room_id = ? ORDER BY ch.score DESC, ch.name', [$roomId]);
-    }
-
     public function forUser(int $userId): array
     {
-        return $this->many(self::SELECT . ' WHERE ch.user_id = ? ORDER BY ch.created_at DESC', [$userId]);
+        return $this->many(self::SELECT . ' WHERE ch.user_id = ? ORDER BY ch.created_at DESC, ch.id DESC', [$userId]);
+    }
+
+    /** Personagens em jogo numa sala, com o dono de cada um. */
+    public function forRoom(int $roomId): array
+    {
+        return $this->many(
+            self::SELECT . ' JOIN room_members m ON m.character_id = ch.id WHERE m.room_id = ? ORDER BY ch.score DESC, ch.name',
+            [$roomId]
+        );
     }
 
     public function ranking(int $limit = 10): array
@@ -49,26 +48,33 @@ final class CharacterRepository
         return $this->many(self::SELECT . ' ORDER BY ch.created_at DESC, ch.id DESC LIMIT ' . $limit, []);
     }
 
+    /** Salas em que o personagem está jogando. */
+    public function roomsOf(int $characterId): array
+    {
+        return $this->many(
+            'SELECT r.id, r.name FROM rooms r JOIN room_members m ON m.room_id = r.id WHERE m.character_id = ? ORDER BY r.name',
+            [$characterId]
+        );
+    }
+
     public function count(): int
     {
         return (int) Database::pdo()->query('SELECT COUNT(*) FROM characters')->fetchColumn();
     }
 
-    public function nameTakenInRoom(int $roomId, string $name): bool
+    public function nameTakenByUser(int $userId, string $name): bool
     {
-        $stmt = Database::pdo()->prepare('SELECT 1 FROM characters WHERE room_id = ? AND LOWER(name) = LOWER(?)');
-        $stmt->execute([$roomId, $name]);
-        return (bool) $stmt->fetchColumn();
+        return $this->one('SELECT 1 FROM characters WHERE user_id = ? AND LOWER(name) = LOWER(?)', [$userId, $name]) !== null;
     }
 
     public function create(array $data): int
     {
         $pdo = Database::pdo();
         $pdo->prepare(
-            'INSERT INTO characters (user_id, room_id, name, species_id, class_id, weapon_id, hp, spell_slots,
-             attr_for, attr_des, attr_con, attr_int, attr_sab, attr_car) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO characters (user_id, name, species_id, class_id, weapon_id, hp, spell_slots,
+             attr_for, attr_des, attr_con, attr_int, attr_sab, attr_car) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
-            $data['user_id'], $data['room_id'], $data['name'], $data['species_id'], $data['class_id'], $data['weapon_id'],
+            $data['user_id'], $data['name'], $data['species_id'], $data['class_id'], $data['weapon_id'],
             $data['hp'], $data['spell_slots'], ...array_values($data['attributes']),
         ]);
         return (int) $pdo->lastInsertId();
@@ -79,6 +85,7 @@ final class CharacterRepository
         Database::pdo()->prepare('UPDATE characters SET score = score + ? WHERE id = ?')->execute([$delta, $id]);
     }
 
+    /** Apaga a ficha; ela sai de todas as salas (ON DELETE CASCADE). */
     public function delete(int $id): void
     {
         Database::pdo()->prepare('DELETE FROM characters WHERE id = ?')->execute([$id]);

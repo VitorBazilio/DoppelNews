@@ -16,8 +16,12 @@ $lastId = $messages ? (int) end($messages)['id'] : 0;
             <span class="badge badge-open"><?= count($players) ?>/<?= (int) $room['max_players'] ?> jogadores</span>
             <?php if ($role === 'admin'): ?><span class="badge">Observando como admin</span><?php endif; ?>
             <?php if ($canManage): ?>
-                <form method="post" action="<?= url("/salas/$roomId/excluir") ?>" data-confirm="Excluir a sala, todos os personagens e o chat?">
+                <form method="post" action="<?= url("/salas/$roomId/excluir") ?>" data-confirm="Excluir a sala e o chat? As fichas continuam com os jogadores.">
                     <?= csrf_field() ?><button class="link-button danger" type="submit">Excluir sala</button>
+                </form>
+            <?php elseif ($role === 'player'): ?>
+                <form method="post" action="<?= url("/salas/$roomId/sair") ?>" data-confirm="Sair da sala? Sua ficha continua na sua conta.">
+                    <?= csrf_field() ?><button class="link-button" type="submit">Sair da sala</button>
                 </form>
             <?php endif; ?>
         </div>
@@ -98,6 +102,8 @@ $lastId = $messages ? (int) end($messages)['id'] : 0;
                                     <input type="hidden" name="character_id" value="<?= (int) $p['id'] ?>">
                                     <button name="points" value="-1" class="award-button" aria-label="Tirar 1 ponto de <?= e($p['name']) ?>">−</button>
                                     <button name="points" value="1" class="award-button" aria-label="Dar 1 ponto para <?= e($p['name']) ?>">+</button>
+                                    <button formaction="<?= url("/salas/$roomId/remover") ?>" class="award-button danger" aria-label="Remover <?= e($p['name']) ?> da sala"
+                                            data-confirm-click="Remover <?= e($p['name']) ?> da sala?">×</button>
                                 </form>
                             <?php endif; ?>
                         </li>

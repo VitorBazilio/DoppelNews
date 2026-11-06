@@ -121,7 +121,7 @@ $pageTitle = $title === 'DoppelNews' ? 'DoppelNews' : $title . ' · DoppelNews';
         <div class="footer-grid">
             <div class="footer-col footer-news">
                 <h2><a href="<?= url('/') ?>"><?= icon('news') ?> News</a></h2>
-                <?php foreach (['Games', 'Anime', 'Hqs', 'Manga', 'RPG'] as $cat): ?>
+                <?php foreach (['Games', 'Anime', 'Hqs', 'Manga'] as $cat): ?>
                     <a href="<?= url('/?categoria=' . urlencode($cat)) ?>"><?= e($cat) ?></a>
                 <?php endforeach; ?>
             </div>

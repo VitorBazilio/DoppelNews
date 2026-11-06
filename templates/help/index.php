@@ -7,7 +7,7 @@ $books = [
     ['Manual_dos_Monstros.pdf', 'manual-dos-monstros.webp', 'Manual dos Monstros', 'Aprenda sobre os inimigos que vão cruzar o caminho do seu grupo.', '2,7 MB'],
 ];
 $faq = [
-    'Preciso de conta para usar o site?' => 'Para ler notícias e jogar as Aventuras, não. Para entrar em salas, criar personagens e acompanhar o ranking, sim: é grátis e leva um minuto.',
+    'Preciso de conta para usar o site?' => 'Para ler as notícias, não. Para entrar em salas, criar personagens, jogar as Aventuras e acompanhar o ranking, sim: é grátis e leva um minuto.',
     'Como entro em uma sala?' => 'Abra a página Salas, escolha uma mesa com vaga (ou clique em Sorte) e crie seu personagem. Cada personagem pertence a uma sala, e você pode ter um por sala.',
     'Como crio minha própria mesa?' => 'Em Salas, clique em Criar sala. Você vira o mestre: não precisa de personagem, conversa como "Mestre" no chat e pode dar pontos de ranking aos jogadores.',
     'Como funciona o ranking?' => 'O mestre de cada sala dá (ou tira) pontos dos personagens pelo desempenho nas sessões. Os 10 mais pontuados aparecem em Personagens › Melhores.',

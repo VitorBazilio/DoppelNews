@@ -76,8 +76,8 @@ main { min-height: 60vh; padding-bottom: 56px; }
 .nav-link::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2px; background: var(--c); transform: scaleX(0); transform-origin: left; transition: transform .5s; }
 .nav-link:hover { text-decoration: none; }
 .nav-link:hover::after, .nav-link[aria-current]::after { transform: scaleX(1); }
-.nav-rooms { --c: var(--cyan); }
-.nav-heroes { --c: var(--green); }
+.nav-rooms, .nav-games { --c: var(--cyan); }
+.nav-heroes, .nav-anime { --c: var(--green); }
 .nav-stories { --c: var(--purple); }
 .nav-help { --c: var(--gold); }
 

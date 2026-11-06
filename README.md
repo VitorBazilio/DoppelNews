@@ -6,13 +6,15 @@ Portal de notícias geek **e** plataforma de RPG de mesa: salas com chat e dados
 
 ## O que o site faz
 
+Visitantes veem o portal de notícias (menu **News, Games, Animes e Ajuda**). Salas, Personagens, Regras e Aventuras aparecem e funcionam só para quem está logado.
+
 | Área | Funções |
 |---|---|
 | **News** | Carrossel de destaques, editorias (Games, Anime, Hqs, Manga, RPG, História), busca, paginação, página da notícia com posts recentes e compartilhamento |
 | **Salas** | Criar mesa (você vira o mestre), listar por Novas/Populares/Mestres, Sorte (sala aleatória com vaga), chat em tempo real, rolagem de dados (`d20`, `2d6+3`, `/r 1d8-1`), mestre dá pontos de ranking |
 | **Personagens** | Criação por sala com compra de pontos (27 pontos, regras do Livro do Jogador), bônus de espécie, PV pelo dado de vida, perícias; ranking, recentes, meus e ficha de exemplo |
-| **Regras** | Compêndio público de classes, espécies, armas e magias |
-| **Aventuras** | Livros-jogo históricos (Somme 1916, Idos de Março) com testes de 2d6; funciona sem conta |
+| **Regras** | Compêndio de classes, espécies, armas e magias |
+| **Aventuras** | Livros-jogo históricos (Somme 1916, Idos de Março) com testes de 2d6 |
 | **Ajuda** | Livros de D&D em PDF, como jogar, perguntas frequentes e contato |
 | **Conta** | Cadastro/login (modal ou página), perfil com personagens, salas e aventuras; troca de nick e senha |
 | **Painel** (admin) | Notícias (criar, editar, excluir, destaque no carrossel, upload convertido para WebP), usuários (promover/excluir) e regras de D&D |

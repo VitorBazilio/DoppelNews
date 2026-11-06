@@ -1,7 +1,10 @@
 <?php
 /** @var string $content @var string $title @var array $meta @var ?array $user @var array $flashes */
 $path = current_path();
+$category = $path === '/' ? ($_GET['categoria'] ?? null) : null;
 $section = match (true) {
+    $category === 'Games' => 'games',
+    $category === 'Anime' => 'anime',
     $path === '/' || str_starts_with($path, '/noticias') => 'news',
     str_starts_with($path, '/salas') => 'rooms',
     str_starts_with($path, '/personagens'), str_starts_with($path, '/regras') => 'heroes',
@@ -9,13 +12,21 @@ $section = match (true) {
     str_starts_with($path, '/ajuda') => 'help',
     default => '',
 };
-$nav = [
-    'news' => ['/', 'News', 'news'],
-    'rooms' => ['/salas', 'Salas', 'axe'],
-    'heroes' => ['/personagens', 'Personagens', 'dnd'],
-    'stories' => ['/aventuras', 'Aventuras', 'dice'],
-    'help' => ['/ajuda', 'Ajuda', 'help'],
-];
+// Visitantes veem o portal de notícias; a parte de RPG aparece para quem está logado.
+$nav = $user
+    ? [
+        'news' => ['/', 'News', 'news'],
+        'rooms' => ['/salas', 'Salas', 'axe'],
+        'heroes' => ['/personagens', 'Personagens', 'dnd'],
+        'stories' => ['/aventuras', 'Aventuras', 'dice'],
+        'help' => ['/ajuda', 'Ajuda', 'help'],
+    ]
+    : [
+        'news' => ['/', 'News', 'news'],
+        'games' => ['/?categoria=Games', 'Games', 'gamepad'],
+        'anime' => ['/?categoria=Anime', 'Animes', 'star'],
+        'help' => ['/ajuda', 'Ajuda', 'help'],
+    ];
 $description = $meta['description'] ?? 'Notícias geek, salas de RPG de mesa, personagens de D&D e aventuras em livro-jogo.';
 $pageTitle = $title === 'DoppelNews' ? 'DoppelNews' : $title . ' · DoppelNews';
 ?>
@@ -114,26 +125,45 @@ $pageTitle = $title === 'DoppelNews' ? 'DoppelNews' : $title . ' · DoppelNews';
                     <a href="<?= url('/?categoria=' . urlencode($cat)) ?>"><?= e($cat) ?></a>
                 <?php endforeach; ?>
             </div>
-            <div class="footer-col footer-rooms">
-                <h2><a href="<?= url('/salas') ?>"><?= icon('axe') ?> Salas</a></h2>
-                <a href="<?= url('/salas?ordem=novas') ?>">Novas</a>
-                <a href="<?= url('/salas?ordem=populares') ?>">Populares</a>
-                <a href="<?= url('/salas?ordem=mestres') ?>">Mestres</a>
-                <a href="<?= url('/salas/sorte') ?>">Sorte</a>
-            </div>
-            <div class="footer-col footer-heroes">
-                <h2><a href="<?= url('/personagens') ?>"><?= icon('dnd') ?> Heróis</a></h2>
-                <a href="<?= url('/personagens?aba=meus') ?>">Meus</a>
-                <a href="<?= url('/personagens?aba=ranking') ?>">Melhores</a>
-                <a href="<?= url('/personagens?aba=exemplo') ?>">Exemplo</a>
-                <a href="<?= url('/regras') ?>">Regras</a>
-            </div>
+            <?php if ($user): ?>
+                <div class="footer-col footer-rooms">
+                    <h2><a href="<?= url('/salas') ?>"><?= icon('axe') ?> Salas</a></h2>
+                    <a href="<?= url('/salas?ordem=novas') ?>">Novas</a>
+                    <a href="<?= url('/salas?ordem=populares') ?>">Populares</a>
+                    <a href="<?= url('/salas?ordem=mestres') ?>">Mestres</a>
+                    <a href="<?= url('/salas/sorte') ?>">Sorte</a>
+                </div>
+                <div class="footer-col footer-heroes">
+                    <h2><a href="<?= url('/personagens') ?>"><?= icon('dnd') ?> Heróis</a></h2>
+                    <a href="<?= url('/personagens?aba=meus') ?>">Meus</a>
+                    <a href="<?= url('/personagens?aba=ranking') ?>">Melhores</a>
+                    <a href="<?= url('/personagens?aba=exemplo') ?>">Exemplo</a>
+                    <a href="<?= url('/regras') ?>">Regras</a>
+                </div>
+            <?php else: ?>
+                <div class="footer-col footer-rooms">
+                    <h2><a href="<?= url('/?categoria=Games') ?>"><?= icon('gamepad') ?> Games</a></h2>
+                    <a href="<?= url('/?categoria=Games') ?>">Notícias</a>
+                    <a href="<?= url('/?categoria=RPG') ?>">RPG</a>
+                    <a href="<?= url('/?categoria=Hist%C3%B3ria') ?>">História</a>
+                </div>
+                <div class="footer-col footer-heroes">
+                    <h2><a href="<?= url('/?categoria=Anime') ?>"><?= icon('star') ?> Animes</a></h2>
+                    <a href="<?= url('/?categoria=Anime') ?>">Notícias</a>
+                    <a href="<?= url('/?categoria=Manga') ?>">Mangás</a>
+                    <a href="<?= url('/?categoria=Hqs') ?>">HQs</a>
+                </div>
+            <?php endif; ?>
             <div class="footer-col footer-help">
                 <h2><a href="<?= url('/ajuda') ?>"><?= icon('help') ?> Ajuda</a></h2>
                 <a href="<?= url('/ajuda#livros') ?>">Livros de D&amp;D</a>
                 <a href="<?= url('/ajuda#como-jogar') ?>">Como jogar</a>
                 <a href="<?= url('/ajuda#perguntas') ?>">Perguntas</a>
-                <a href="<?= url('/aventuras') ?>">Aventuras</a>
+                <?php if ($user): ?>
+                    <a href="<?= url('/aventuras') ?>">Aventuras</a>
+                <?php else: ?>
+                    <a href="<?= url('/cadastrar') ?>" data-dialog="register">Criar conta</a>
+                <?php endif; ?>
             </div>
             <div class="footer-col footer-contact">
                 <h2><a href="<?= url('/ajuda#contato') ?>"><?= icon('contacts') ?> Contatos</a></h2>

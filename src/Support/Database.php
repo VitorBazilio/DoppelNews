@@ -64,6 +64,11 @@ final class Database
         if (!preg_match('#^[a-z]+:#i', $dsn) && preg_match('/(^|;)\s*host\s*=/i', $dsn)) {
             $dsn = 'mysql:' . $dsn;
         }
+        // Só o endereço do servidor (ex.: gateway01.us-east-1.prod.aws.tidbcloud.com ou host:porta)
+        if (preg_match('/^([a-z0-9.-]+\.[a-z]{2,})(?::(\d+))?$/i', $dsn, $m)) {
+            $port = (int) ($m[2] ?? 0) ?: (int) (Config::get('DB_PORT') ?: (str_contains($m[1], 'tidbcloud.com') ? 4000 : 3306));
+            $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $m[1], $port, Config::get('DB_NAME') ?: 'doppel');
+        }
         if (preg_match('#^mysql://#i', $dsn)) {
             $url = parse_url($dsn);
             if ($url === false || empty($url['host'])) {

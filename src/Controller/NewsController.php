@@ -6,6 +6,7 @@ namespace Doppel\Controller;
 
 use Doppel\Repository\NewsRepository;
 use Doppel\Story\StoryLibrary;
+use Doppel\Support\Auth;
 use Doppel\Support\View;
 
 final class NewsController
@@ -25,7 +26,7 @@ final class NewsController
             'search' => $search,
             'result' => $repo->paginate($category, query_page(), mb_substr($search, 0, 80)),
             'featured' => $isFrontPage ? $repo->featured() : [],
-            'stories' => $isFrontPage ? StoryLibrary::all() : [],
+            'stories' => $isFrontPage && Auth::user() !== null ? StoryLibrary::all() : [],
         ], $category ?? 'Conteúdo Geek');
     }
 

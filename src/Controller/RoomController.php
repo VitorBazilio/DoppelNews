@@ -29,6 +29,7 @@ final class RoomController
 
     public function index(): void
     {
+        Auth::requireUser();
         $order = $_GET['ordem'] ?? 'novas';
         if (!isset(RoomRepository::ORDERS[$order])) {
             $order = 'novas';
@@ -38,6 +39,7 @@ final class RoomController
 
     public function lucky(): void
     {
+        Auth::requireUser();
         $id = $this->rooms->randomOpenId();
         if ($id === null) {
             flash('info', 'Nenhuma sala com vaga agora. Que tal criar a sua?');

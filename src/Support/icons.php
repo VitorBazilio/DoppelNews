@@ -2,8 +2,19 @@
 
 declare(strict_types=1);
 
-// Ícones SVG do Doppel (Font Awesome), no formato nome => [viewBox, path].
+// Ícones SVG do Doppel (Font Awesome e dois desenhados à mão), no formato nome => [viewBox, path, evenodd?].
 return array (
+  'gamepad' =>
+  array (
+    0 => '0 0 24 24',
+    1 => 'M7 6h10a5 5 0 0 1 5 5v2.5a3.5 3.5 0 0 1-6.3 2.1L14.5 14h-5l-1.2 1.6A3.5 3.5 0 0 1 2 13.5V11a5 5 0 0 1 5-5zM6.25 8.75v1.75H4.5v1.5h1.75v1.75h1.5V12H9.5v-1.5H7.75V8.75zM16.5 8.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zm2.5 2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z',
+    2 => true,
+  ),
+  'star' =>
+  array (
+    0 => '0 0 24 24',
+    1 => 'M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z',
+  ),
   'axe' => 
   array (
     0 => '0 0 512 512',

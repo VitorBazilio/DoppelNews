@@ -19,8 +19,10 @@ final class CharacterController
 
     private CharacterRepository $characters;
 
+    /** Toda a área de personagens é exclusiva de quem está logado. */
     public function __construct()
     {
+        Auth::requireUser();
         $this->characters = new CharacterRepository();
     }
 
@@ -29,9 +31,6 @@ final class CharacterController
         $tab = $_GET['aba'] ?? 'ranking';
         if (!isset(self::TABS[$tab])) {
             $tab = 'ranking';
-        }
-        if ($tab === 'meus') {
-            Auth::requireUser();
         }
 
         $list = match ($tab) {

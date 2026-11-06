@@ -231,8 +231,9 @@ function icon(string $name, string $class = ''): string
         return '';
     }
     [$viewBox, $path] = $icons[$name];
+    $fillRule = !empty($icons[$name][2]) ? ' fill-rule="evenodd"' : '';
     return '<svg class="icon ' . e($class) . '" viewBox="' . $viewBox . '" aria-hidden="true" focusable="false">'
-        . '<path fill="currentColor" d="' . $path . '"/></svg>';
+        . '<path fill="currentColor"' . $fillRule . ' d="' . $path . '"/></svg>';
 }
 
 function signed(int $value): string

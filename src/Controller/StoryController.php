@@ -10,13 +10,15 @@ use Doppel\Story\StoryLibrary;
 use Doppel\Support\Auth;
 use Doppel\Support\View;
 
-/** Aventuras em livro-jogo: abertas também para visitantes (o progresso fica na sessão). */
+/** Aventuras em livro-jogo (exclusivas de quem está logado; o progresso fica salvo na conta). */
 final class StoryController
 {
     private RunRepository $runs;
 
+    /** As aventuras são exclusivas de quem está logado. */
     public function __construct()
     {
+        Auth::requireUser();
         $this->runs = new RunRepository();
     }
 

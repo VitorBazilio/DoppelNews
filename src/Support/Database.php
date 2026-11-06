@@ -47,13 +47,22 @@ final class Database
      */
     private static function connectionSettings(): array
     {
-        $clean = static fn (string $v): string => trim($v, " \t\n\r\"'");
-        $dsn = $clean(Config::get('DB_DSN'));
-        $user = $clean(Config::get('DB_USER'));
-        $pass = $clean(Config::get('DB_PASS'));
+        // Remove espaços, aspas, caracteres invisíveis e um "NOME=" colado por engano no valor.
+        $clean = static function (string $value, string $name): string {
+            $value = (string) preg_replace('/[\x{00A0}\x{200B}-\x{200D}\x{FEFF}]/u', '', $value);
+            $value = trim($value, " \t\n\r\"'");
+            return trim((string) preg_replace('/^' . $name . '\s*=\s*/i', '', $value), " \t\n\r\"'");
+        };
+        $dsn = $clean(Config::get('DB_DSN'), 'DB_DSN');
+        $user = $clean(Config::get('DB_USER'), 'DB_USER');
+        $pass = $clean(Config::get('DB_PASS'), 'DB_PASS');
 
         if ($dsn === '') {
             return ['sqlite:' . ROOT . '/storage/doppel.sqlite', null, null];
+        }
+        // "host=…;dbname=…" sem o prefixo do driver
+        if (!preg_match('#^[a-z]+:#i', $dsn) && preg_match('/(^|;)\s*host\s*=/i', $dsn)) {
+            $dsn = 'mysql:' . $dsn;
         }
         if (preg_match('#^mysql://#i', $dsn)) {
             $url = parse_url($dsn);
@@ -64,6 +73,13 @@ final class Database
                 $url['host'], $url['port'] ?? 3306, ltrim($url['path'] ?? '', '/') ?: 'doppel');
             $user = $user !== '' ? $user : urldecode($url['user'] ?? '');
             $pass = $pass !== '' ? $pass : urldecode($url['pass'] ?? '');
+        }
+        if (!preg_match('#^(mysql|sqlite):#i', $dsn)) {
+            // Mostra só o formato do valor recebido (sem senha) para facilitar a correção.
+            throw new \PDOException(sprintf(
+                'DB_DSN deve começar com "mysql:host=". Valor recebido começa com "%s" (%d caracteres).',
+                mb_substr($dsn, 0, 12), mb_strlen($dsn)
+            ));
         }
         return [$dsn, $user ?: null, $pass ?: null];
     }

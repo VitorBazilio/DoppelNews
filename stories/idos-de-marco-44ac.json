@@ -1,0 +1,148 @@
+{
+  "title": "Os Idos de Março",
+  "subtitle": "Roma, véspera do assassinato de César",
+  "era": "Roma Antiga · 14 de março de 44 a.C.",
+  "year": -44,
+  "summary": "Você é um escriba na casa de um senador e descobre uma conspiração contra Júlio César. Avisar, calar ou fugir: cada decisão muda seu destino e o de Roma.",
+  "duration": "5–8 min",
+  "start": "vespera",
+  "deathNode": "morte",
+  "stats": {
+    "vida": { "label": "Vida", "start": 6, "max": 6, "lethal": true },
+    "coragem": { "label": "Coragem", "start": 3, "max": 6 },
+    "astucia": { "label": "Astúcia", "start": 3, "max": 6 }
+  },
+  "nodes": {
+    "vespera": {
+      "title": "Uma conversa ouvida por acaso",
+      "date": "14 de março de 44 a.C.",
+      "text": [
+        "Roma vive sob a ditadura vitalícia de Caio Júlio César. Você, Lúcio, é um escriba liberto que copia cartas na casa de um senador. Ao recolher pergaminhos tarde da noite, ouve vozes tensas atrás de uma cortina: ‘Amanhã, no Senado, nos Idos de Março.’",
+        "Nenhum nome é dito, mas o sentido é inconfundível: planeja-se algo contra César."
+      ],
+      "choices": [
+        { "text": "Pedir conselho ao velho senador Cícero", "to": "cicero" },
+        { "text": "Ir direto à casa de César para avisá-lo", "to": "casa_cesar" },
+        { "text": "Fingir que não ouviu nada", "to": "manha" }
+      ]
+    },
+    "cicero": {
+      "title": "O conselho de Cícero",
+      "text": [
+        "O grande orador o recebe de roupão, entre rolos de papiro. Escuta tudo com um sorriso triste: ‘Prudência, jovem. Quem se mete nessas coisas costuma pagar o preço. Mas leve este anel; ele abrirá portas na casa de César.’"
+      ],
+      "effects": { "items": ["Anel de Cícero"], "stats": { "astucia": 1 } },
+      "choices": [{ "text": "Seguir para a casa de César", "to": "casa_cesar" }]
+    },
+    "casa_cesar": {
+      "title": "Diante da casa de César",
+      "date": "Madrugada dos Idos",
+      "text": [
+        "Os guardas barram sua passagem. Dentro, Calpúrnia, esposa de César, teve sonhos terríveis e já pede ao marido que não saia. Você precisa chegar até eles.",
+        "Se tiver o anel de Cícero, os guardas hesitam."
+      ],
+      "choices": [
+        {
+          "text": "Mostrar o anel de Cícero aos guardas",
+          "to": "calpurnia",
+          "requires": { "items": ["Anel de Cícero"] }
+        },
+        {
+          "text": "Convencer os guardas com uma história engenhosa",
+          "to": "calpurnia",
+          "check": { "stat": "astucia", "target": 8, "fail": "caminho" }
+        },
+        { "text": "Esperar César sair e abordá-lo na rua", "to": "caminho" }
+      ]
+    },
+    "calpurnia": {
+      "title": "Calpúrnia ouve você",
+      "text": [
+        "Calpúrnia o escuta com os olhos cheios de lágrimas. Chama o marido, mas César, orgulhoso, resiste: não pode parecer temeroso. Então chega Décimo Bruto, aparentemente amigo, e brinca que o Senado vai rir se o ditador faltar por causa de um sonho.",
+        "É o momento de falar de novo."
+      ],
+      "choices": [
+        {
+          "text": "Insistir diante de todos",
+          "to": "final_salvo",
+          "check": { "stat": "coragem", "target": 9, "fail": "senado" }
+        },
+        { "text": "Acompanhar a liteira de César até o Senado", "to": "senado" }
+      ]
+    },
+    "caminho": {
+      "title": "Na rua",
+      "text": [
+        "A liteira de César passa pela multidão. Você corre ao lado e estende um rolo com o aviso. Ele agradece, pega o rolo com outros papéis e promete ler depois."
+      ],
+      "choices": [{ "text": "Seguir a multidão até o Senado", "to": "senado" }]
+    },
+    "manha": {
+      "title": "A manhã dos Idos",
+      "text": [
+        "Você tenta trabalhar, mas as mãos tremem. Pela janela vê senadores caminhando em direção ao Teatro de Pompeu, onde o Senado se reúne."
+      ],
+      "choices": [
+        { "text": "Ir ao Teatro de Pompeu por curiosidade", "to": "senado" },
+        { "text": "Trancar a porta e esperar", "to": "final_testemunha" }
+      ]
+    },
+    "senado": {
+      "title": "O Teatro de Pompeu",
+      "date": "Meio-dia",
+      "text": [
+        "Os senadores cercam César, com pedidos e súplicas. Um deles puxa a toga. Um punhal brilha. Em segundos há gritos, sangue e uma estátua de Pompeu como testemunha muda.",
+        "Roma acaba de mudar para sempre."
+      ],
+      "choices": [
+        {
+          "text": "Correr para socorrer César",
+          "to": "final_heroi",
+          "check": { "stat": "coragem", "target": 9, "fail": "morte" }
+        },
+        { "text": "Recuar entre a multidão em pânico", "to": "final_testemunha" },
+        { "text": "Fugir de Roma antes que as portas se fechem", "to": "final_exilio" }
+      ]
+    },
+    "final_salvo": {
+      "title": "César fica em casa",
+      "ending": "victory",
+      "text": [
+        "Por uma manhã, o sonho de Calpúrnia e sua coragem vencem. César ordena que a sessão seja adiada. Mas conspiradores determinados dificilmente desistem: nos dias seguintes, outro plano será tentado.",
+        "Nota histórica: na vida real, César foi ao Senado e foi assassinado por cerca de sessenta conspiradores, entre eles Brutus e Cássio. O caos que se seguiu levou à guerra civil e, por fim, ao Império de Otávio."
+      ]
+    },
+    "final_heroi": {
+      "title": "Ao lado do ditador",
+      "ending": "victory",
+      "text": [
+        "Você se joga entre os punhais e protege César por alguns segundos preciosos. Ele sobrevive à primeira onda de golpes. Seus guardas chegam e os conspiradores fogem.",
+        "Nota histórica: César foi apunhalado 23 vezes, segundo Suetônio, e morreu ao pé da estátua de Pompeu."
+      ]
+    },
+    "final_testemunha": {
+      "title": "Testemunha da história",
+      "ending": "survived",
+      "text": [
+        "Você sobrevive aos dias de tumulto e se torna uma das testemunhas que, anos depois, contarão aos historiadores como foi a manhã dos Idos.",
+        "Nota histórica: nos anos seguintes, Marco Antônio e Otávio derrotaram os conspiradores em Filipos (42 a.C.), e a República nunca mais se restabeleceu."
+      ]
+    },
+    "final_exilio": {
+      "title": "Exílio voluntário",
+      "ending": "survived",
+      "text": [
+        "Você atravessa as portas da cidade antes do caos e se esconde numa fazenda no interior. Nos meses seguintes, ouve as notícias da guerra civil e de proscrições que levaram à morte inclusive o seu amigo Cícero.",
+        "Nota histórica: Cícero foi assassinado em 43 a.C. por ordem de Marco Antônio."
+      ]
+    },
+    "morte": {
+      "title": "Um punhal na confusão",
+      "ending": "defeat",
+      "text": [
+        "Na confusão do Senado, um punhal erra o alvo e acerta você. Seu nome nunca entrará nos livros.",
+        "Nota histórica: nos Idos de Março de 44 a.C., Roma perdeu um ditador e ganhou décadas de guerras civis."
+      ]
+    }
+  }
+}

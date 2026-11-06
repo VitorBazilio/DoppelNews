@@ -1,0 +1,34 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(60) NOT NULL,
+    email VARCHAR(190) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(10) NOT NULL DEFAULT 'user',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS news (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    summary VARCHAR(400) NOT NULL,
+    body TEXT NOT NULL,
+    category VARCHAR(30) NOT NULL,
+    image VARCHAR(255) NULL,
+    published_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_news_category_date (category, published_at)
+) CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS story_runs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    owner_key VARCHAR(80) NOT NULL,
+    story_id VARCHAR(60) NOT NULL,
+    state TEXT NOT NULL,
+    finished TINYINT(1) NOT NULL DEFAULT 0,
+    ending VARCHAR(30) NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_owner_story (owner_key, story_id)
+) CHARSET=utf8mb4
+;
+CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(128) PRIMARY KEY,
+    data TEXT NOT NULL,
+    updated_at INT UNSIGNED NOT NULL
+) CHARSET=utf8mb4

@@ -1,0 +1,256 @@
+{
+  "title": "Lama e Aço",
+  "subtitle": "Primeiro dia da Batalha do Somme",
+  "era": "Primeira Guerra Mundial · 1 de julho de 1916",
+  "year": 1916,
+  "summary": "Você é um soldado raso de um batalhão de voluntários britânicos. Às 7h30 o apito soará e você terá de atravessar a Terra de Ninguém. Quem volta para casa?",
+  "duration": "10–15 min",
+  "start": "alvorada",
+  "deathNode": "morte",
+  "stats": {
+    "vida": { "label": "Vida", "start": 10, "max": 10, "lethal": true },
+    "coragem": { "label": "Coragem", "start": 3, "max": 6 },
+    "moral": { "label": "Moral", "start": 5, "max": 10 }
+  },
+  "nodes": {
+    "alvorada": {
+      "title": "Alvorada na trincheira",
+      "date": "1º de julho de 1916, 6h45",
+      "text": [
+        "A névoa da manhã ainda cobre o vale do rio Somme. Há uma semana a artilharia britânica martela as linhas alemãs, e os oficiais garantem que o arame farpado inimigo foi destruído e que não restou ninguém vivo para resistir.",
+        "Você é o soldado Arthur Pell, 19 anos, de um batalhão de amigos que se alistaram juntos, os chamados Pals. Ao seu lado, o cabo Tom Wicks ajeita o capacete e tenta sorrir. Faltam menos de quarenta minutos para o ataque."
+      ],
+      "choices": [
+        { "text": "Conversar com o sargento Hale", "to": "sargento" },
+        { "text": "Escrever uma última carta para casa", "to": "carta" },
+        { "text": "Conferir o equipamento em silêncio", "to": "apito", "effects": { "stats": { "coragem": 1 } } }
+      ]
+    },
+    "sargento": {
+      "title": "O sargento Hale",
+      "text": [
+        "Hale é veterano de Mons e já viu o que a metralhadora faz com homens em linha reta. Ele fala baixo: ‘Não confie na artilharia, garoto. Leve isto — se o arame estiver de pé, vai valer mais que um fuzil.’",
+        "Ele coloca um alicate de cortar arame na sua mão e aperta seu ombro."
+      ],
+      "effects": { "items": ["Alicate de arame"], "stats": { "moral": 1 } },
+      "choices": [{ "text": "Agradecer e voltar ao seu posto", "to": "apito" }]
+    },
+    "carta": {
+      "title": "Uma carta para casa",
+      "text": [
+        "‘Querida mãe, estou bem. A comida é ruim, mas os rapazes são bons. Se a carta chegar tarde, saiba que pensei em você…’",
+        "Você dobra o papel e o guarda junto ao peito. Escrever acalmou suas mãos."
+      ],
+      "effects": { "items": ["Carta para casa"], "stats": { "moral": 2 } },
+      "choices": [{ "text": "Guardar a carta e esperar o sinal", "to": "apito" }]
+    },
+    "apito": {
+      "title": "O apito",
+      "date": "7h28 — 7h30",
+      "text": [
+        "A terra treme: minas gigantes explodem sob as linhas alemãs. O bombardeio cessa de repente e um silêncio estranho cai sobre o vale.",
+        "Os apitos soam ao longo de toda a linha. A escada de madeira está diante de você."
+      ],
+      "choices": [
+        { "text": "Subir a escada com o pelotão", "to": "terra_de_ninguem" },
+        {
+          "text": "Respirar fundo e esperar mais um segundo",
+          "to": "terra_de_ninguem",
+          "check": { "stat": "coragem", "target": 8, "fail": "hesitacao", "failEffects": { "stats": { "moral": -1 } } }
+        }
+      ]
+    },
+    "hesitacao": {
+      "title": "A hesitação",
+      "text": [
+        "Suas pernas não obedecem. O sargento Hale o agarra pela gola e o empurra para cima da escada: ‘Agora, Pell! Ou nunca!’",
+        "Você sobe, envergonhado, mas vivo."
+      ],
+      "choices": [{ "text": "Avançar", "to": "terra_de_ninguem" }]
+    },
+    "terra_de_ninguem": {
+      "title": "Terra de Ninguém",
+      "date": "7h35",
+      "text": [
+        "As metralhadoras alemãs, que supostamente haviam sido silenciadas, abrem fogo de uma só vez. Homens caem à direita e à esquerda. O arame farpado está de pé, quase intacto.",
+        "À sua frente há uma cratera de obus. Mais adiante, um emaranhado de arame. Um pouco atrás, um homem pede ajuda: é o cabo Tom Wicks, com a perna sangrando."
+      ],
+      "choices": [
+        {
+          "text": "Correr até a cratera de obus",
+          "to": "cratera",
+          "check": { "stat": "coragem", "target": 7, "fail": "ferido", "failEffects": { "stats": { "vida": -3 } } }
+        },
+        { "text": "Arrastar-se pelo capim até o arame", "to": "arame", "effects": { "stats": { "vida": -1 } } },
+        {
+          "text": "Voltar para ajudar o cabo Tom",
+          "to": "ajudar",
+          "effects": { "stats": { "vida": -2, "moral": 2 } }
+        }
+      ]
+    },
+    "ajudar": {
+      "title": "Nenhum homem para trás",
+      "text": [
+        "Uma bala rasga seu braço, mas você alcança Tom e o arrasta pelos arreios até uma cratera. Ele murmura que você é louco. Você responde que está ocupado demais para discutir."
+      ],
+      "effects": { "items": ["Tom, ferido, ao seu lado"] },
+      "choices": [{ "text": "Recuperar o fôlego na cratera", "to": "cratera" }]
+    },
+    "ferido": {
+      "title": "Atingido",
+      "text": [
+        "Um golpe quente atravessa seu ombro e você cai de lado na lama. O som da batalha parece distante, como se estivesse debaixo d'água. Você ainda consegue se mexer, mas vai custar caro."
+      ],
+      "choices": [
+        { "text": "Pedir socorro aos padioleiros", "to": "evacuado" },
+        {
+          "text": "Cerrar os dentes e seguir em frente",
+          "to": "trincheira_alema",
+          "requires": { "stats": { "coragem": 4 } },
+          "effects": { "stats": { "vida": -1 } }
+        }
+      ]
+    },
+    "cratera": {
+      "title": "A cratera",
+      "text": [
+        "Você mergulha na cratera de obus, que fede a lama e pólvora. Outros soldados já estão ali, ofegantes. O som das balas passando sobre a borda é constante, como chuva de pedras.",
+        "Dá para ver, a cerca de cinquenta metros, a trincheira alemã. O dia ainda é longo."
+      ],
+      "choices": [
+        { "text": "Esperar a noite dentro da cratera", "to": "noite_cratera" },
+        {
+          "text": "Sair da cratera e atacar a trincheira",
+          "to": "trincheira_alema",
+          "check": { "stat": "coragem", "target": 9, "fail": "ferido", "failEffects": { "stats": { "vida": -3 } } }
+        }
+      ]
+    },
+    "arame": {
+      "title": "O arame farpado",
+      "text": [
+        "O arame não foi destruído. Rolos grossos de farpas bloqueiam o caminho, e vários soldados estão presos nele, indefesos."
+      ],
+      "choices": [
+        {
+          "text": "Cortar o arame com o alicate do sargento",
+          "to": "trincheira_alema",
+          "requires": { "items": ["Alicate de arame"] }
+        },
+        {
+          "text": "Tentar passar por uma brecha estreita",
+          "to": "trincheira_alema",
+          "check": { "stat": "coragem", "target": 9, "fail": "ferido", "failEffects": { "stats": { "vida": -4 } } }
+        },
+        { "text": "Recuar para a cratera", "to": "cratera" }
+      ]
+    },
+    "trincheira_alema": {
+      "title": "Dentro da trincheira inimiga",
+      "date": "Fim da manhã",
+      "text": [
+        "Você chega à linha alemã, uma trincheira profunda, com abrigos escavados na terra. Dentro de um deles, soldados alemães exaustos levantam as mãos.",
+        "Em volta, os poucos britânicos que chegaram até ali olham para você, esperando uma decisão."
+      ],
+      "choices": [
+        { "text": "Aceitar a rendição dos alemães", "to": "prisioneiros" },
+        { "text": "Assumir posição e esperar reforços", "to": "contra_ataque" }
+      ]
+    },
+    "prisioneiros": {
+      "title": "Prisioneiros",
+      "text": [
+        "Um jovem alemão, quase da sua idade, oferece o próprio capacete em sinal de rendição. Você o aceita e, por um instante, percebe que ele também só queria voltar para casa."
+      ],
+      "effects": { "items": ["Capacete alemão"], "stats": { "moral": 1 } },
+      "choices": [{ "text": "Preparar a defesa da trincheira", "to": "contra_ataque" }]
+    },
+    "contra_ataque": {
+      "title": "O contra-ataque",
+      "date": "Entardecer",
+      "text": [
+        "Os reforços prometidos não chegam: a maior parte do ataque britânico ao longo da linha foi contida. Ao entardecer, uma coluna alemã avança pela trincheira. Você e os poucos homens restantes terão de decidir como terminar o dia."
+      ],
+      "choices": [
+        {
+          "text": "Resistir com a baioneta",
+          "to": "final_medalha",
+          "check": { "stat": "coragem", "target": 9, "fail": "final_prisioneiro", "failEffects": { "stats": { "vida": -1 } } }
+        },
+        { "text": "Retirar-se para a cratera com seus companheiros", "to": "noite_cratera" }
+      ]
+    },
+    "noite_cratera": {
+      "title": "A longa noite",
+      "date": "Noite de 1º para 2 de julho",
+      "text": [
+        "A noite chega, e com ela os gritos dos feridos espalhados na Terra de Ninguém. Os padioleiros arriscam a vida para recolher o que podem.",
+        "Você precisa decidir o que fazer com as poucas forças que lhe restam."
+      ],
+      "choices": [
+        { "text": "Esperar em silêncio pelo amanhecer", "to": "evacuado" },
+        {
+          "text": "Arrastar-se de volta às linhas britânicas com Tom",
+          "to": "final_volta",
+          "requires": { "items": ["Tom, ferido, ao seu lado"] }
+        },
+        {
+          "text": "Voltar sozinho, rastejando no escuro",
+          "to": "final_volta_sozinho",
+          "check": { "stat": "coragem", "target": 8, "fail": "morte" }
+        }
+      ]
+    },
+    "evacuado": {
+      "title": "Evacuação",
+      "ending": "survived",
+      "text": [
+        "Os padioleiros o encontram ao amanhecer. Você é levado a um hospital de campanha e, depois, para um navio rumo à Inglaterra. A guerra continuará por mais dois anos e quatro meses, mas, para você, ela terminou.",
+        "Nota histórica: no primeiro dia da Batalha do Somme o exército britânico sofreu cerca de 57 mil baixas, das quais quase 20 mil mortos — o dia mais sangrento da história militar britânica. A ofensiva durou mais de quatro meses."
+      ]
+    },
+    "final_medalha": {
+      "title": "A trincheira resiste",
+      "ending": "victory",
+      "text": [
+        "Com a baioneta calada e o coração disparado, você e os seus seguram a trincheira até o escurecer. Os alemães recuam. Na manhã seguinte, um capitão cita seu nome num relatório.",
+        "Você ganha uma medalha, mas nunca mais ouvirá o apito de um jogo de futebol sem lembrar daquele dia.",
+        "Nota histórica: poucos pontos da linha britânica foram conquistados no primeiro dia; os ganhos mais significativos ocorreram no sul, perto de Montauban. Em geral, o ataque falhou."
+      ]
+    },
+    "final_prisioneiro": {
+      "title": "Capturado",
+      "ending": "survived",
+      "text": [
+        "A trincheira cai. Você é desarmado e levado como prisioneiro para a retaguarda alemã. O tratamento é duro, mas você sobreviverá. Sua carta chegará à Inglaterra meses depois, junto com a notícia de que está vivo.",
+        "Nota histórica: centenas de milhares de soldados de todos os exércitos foram feitos prisioneiros durante a guerra."
+      ]
+    },
+    "final_volta": {
+      "title": "De volta, juntos",
+      "ending": "victory",
+      "text": [
+        "Horas arrastando o corpo na lama, parando a cada sinalizador. Quando chega à trincheira britânica, Tom está desmaiado, mas vivo. Os dois são levados ao hospital.",
+        "Anos depois, Tom será o padrinho de seu primeiro filho. Alguns finais da guerra são também recomeços.",
+        "Nota histórica: o Somme terminou em novembro de 1916 com mais de um milhão de baixas somando todos os lados."
+      ]
+    },
+    "final_volta_sozinho": {
+      "title": "Sozinho no escuro",
+      "ending": "survived",
+      "text": [
+        "Você rasteja por horas e, quando chega, a sentinela britânica quase atira. Está vivo, mas a lembrança dos que ficaram para trás nunca irá embora.",
+        "Nota histórica: após a guerra, milhões de sobreviventes conviveram com o que então se chamava ‘neurose de guerra’, hoje reconhecido como estresse pós-traumático."
+      ]
+    },
+    "morte": {
+      "title": "Fim da linha",
+      "ending": "defeat",
+      "text": [
+        "Tudo escurece. O barulho some. A carta que escreveu, se existir, será entregue a alguém que não saberá como agradecer.",
+        "Nota histórica: o Memorial de Thiepval, no norte da França, guarda os nomes de mais de 72 mil soldados britânicos e sul-africanos desaparecidos no Somme sem túmulo conhecido."
+      ]
+    }
+  }
+}

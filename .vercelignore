@@ -1,0 +1,4 @@
+storage
+docs
+.env
+*.sqlite

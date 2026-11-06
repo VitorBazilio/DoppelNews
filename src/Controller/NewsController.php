@@ -16,22 +16,35 @@ final class NewsController
         if (!in_array($category, NEWS_CATEGORIES, true)) {
             $category = null;
         }
-        $page = (int) ($_GET['pg'] ?? 1);
+        $search = is_string($_GET['busca'] ?? null) ? trim(mb_scrub($_GET['busca'], 'UTF-8')) : '';
+        $repo = new NewsRepository();
+        $isFrontPage = $category === null && $search === '' && query_page() === 1;
 
         View::render('news/index', [
             'category' => $category,
-            'result' => (new NewsRepository())->paginate($category, $page),
-            'stories' => StoryLibrary::all(),
-        ], 'Doppel — notícias e aventuras');
+            'search' => $search,
+            'result' => $repo->paginate($category, query_page(), mb_substr($search, 0, 80)),
+            'featured' => $isFrontPage ? $repo->featured() : [],
+            'stories' => $isFrontPage ? StoryLibrary::all() : [],
+        ], $category ?? 'Conteúdo Geek');
     }
 
     public function show(string $id): void
     {
         $repo = new NewsRepository();
-        $article = $repo->find((int) $id);
-        if ($article === null) {
-            View::notFound();
-        }
-        View::render('news/show', ['article' => $article, 'related' => $repo->related($article)], $article['title']);
+        $article = $repo->find((int) $id) ?? View::notFound();
+        $image = media_url($article['image']);
+
+        View::render('news/show', [
+            'article' => $article,
+            'recent' => $repo->recent(4, (int) $article['id']),
+            'related' => $repo->related($article),
+            'meta' => [
+                'description' => $article['summary'],
+                'type' => 'article',
+                'image' => $image !== null ? absolute_url($image) : null,
+                'author' => $article['author'],
+            ],
+        ], $article['title']);
     }
 }

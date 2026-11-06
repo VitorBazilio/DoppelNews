@@ -10,20 +10,72 @@ final class UserRepository
 {
     public function find(int $id): ?array
     {
-        return $this->fetchOne('SELECT id, name, email, role FROM users WHERE id = ?', [$id]);
+        return $this->fetchOne('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [$id]);
     }
 
     public function findByEmail(string $email): ?array
     {
-        return $this->fetchOne('SELECT * FROM users WHERE email = ?', [strtolower($email)]);
+        return $this->fetchOne('SELECT * FROM users WHERE email = ?', [mb_strtolower(trim($email))]);
     }
 
     public function create(string $name, string $email, string $password, string $role = 'user'): int
     {
         $pdo = Database::pdo();
         $pdo->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
-            ->execute([$name, strtolower($email), password_hash($password, PASSWORD_DEFAULT), $role]);
+            ->execute([$name, mb_strtolower(trim($email)), password_hash($password, PASSWORD_DEFAULT), $role]);
         return (int) $pdo->lastInsertId();
+    }
+
+    /** Lista para o painel, com quantos personagens e salas cada usuário tem. */
+    public function allWithStats(): array
+    {
+        return Database::pdo()->query(
+            'SELECT u.id, u.name, u.email, u.role, u.created_at,
+                    (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) AS characters,
+                    (SELECT COUNT(*) FROM rooms r WHERE r.master_id = u.id) AS rooms
+             FROM users u ORDER BY u.created_at DESC, u.id DESC'
+        )->fetchAll();
+    }
+
+    public function count(): int
+    {
+        return (int) Database::pdo()->query('SELECT COUNT(*) FROM users')->fetchColumn();
+    }
+
+    public function countAdmins(): int
+    {
+        return (int) Database::pdo()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
+    }
+
+    public function updateName(int $id, string $name): void
+    {
+        Database::pdo()->prepare('UPDATE users SET name = ? WHERE id = ?')->execute([$name, $id]);
+    }
+
+    public function updatePassword(int $id, string $password): void
+    {
+        Database::pdo()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+            ->execute([password_hash($password, PASSWORD_DEFAULT), $id]);
+    }
+
+    public function verifyPassword(int $id, string $password): bool
+    {
+        $hash = $this->fetchOne('SELECT password_hash FROM users WHERE id = ?', [$id])['password_hash'] ?? '';
+        return $hash !== '' && password_verify($password, $hash);
+    }
+
+    public function setRole(int $id, string $role): void
+    {
+        Database::pdo()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
+    }
+
+    /** Remove o usuário; salas, personagens e progresso nas aventuras vão junto. */
+    public function delete(int $id): void
+    {
+        Database::transaction(static function (\PDO $pdo) use ($id): void {
+            $pdo->prepare('DELETE FROM story_runs WHERE owner_key = ?')->execute(['u:' . $id]);
+            $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+        });
     }
 
     private function fetchOne(string $sql, array $params): ?array

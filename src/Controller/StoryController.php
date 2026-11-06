@@ -10,6 +10,7 @@ use Doppel\Story\StoryLibrary;
 use Doppel\Support\Auth;
 use Doppel\Support\View;
 
+/** Aventuras em livro-jogo: abertas também para visitantes (o progresso fica na sessão). */
 final class StoryController
 {
     private RunRepository $runs;
@@ -60,10 +61,7 @@ final class StoryController
         $run = $this->runs->find(Auth::ownerKey(), $slug);
         $index = filter_var($_POST['choice'] ?? null, FILTER_VALIDATE_INT);
 
-        $next = ($run !== null && $index !== false)
-            ? Gamebook::choose($story, $run['state'], $index)
-            : null;
-
+        $next = ($run !== null && $index !== false) ? Gamebook::choose($story, $run['state'], $index) : null;
         if ($next === null) {
             flash('error', 'Essa escolha não está disponível.');
         } else {

@@ -22,7 +22,7 @@ final class Router
 
     public function dispatch(string $method, string $uri): void
     {
-        $path = rtrim(parse_url($uri, PHP_URL_PATH) ?: '/', '/') ?: '/';
+        $path = current_path($uri);
 
         foreach ($this->routes as [$routeMethod, $pattern, [$class, $action]]) {
             $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $pattern) . '$#';

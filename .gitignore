@@ -3,4 +3,3 @@
 !/public/uploads/.gitkeep
 .env
 .vs/
-node_modules/

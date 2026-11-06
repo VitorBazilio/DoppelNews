@@ -1,14 +1,15 @@
 <?php
 /** @var array $story @var array $state @var array $node @var array $choices @var ?string $ending */
 $endingTitle = ['victory' => 'Vitória', 'survived' => 'Você sobreviveu', 'defeat' => 'Fim de jogo'];
+$base = '/aventuras/' . $story['id'];
 ?>
-<div class="play-layout">
-    <section class="scene">
-        <?php if (!empty($node['date'])): ?><p class="eyebrow"><?= e($node['date']) ?></p><?php endif; ?>
-        <h1><?= e($node['title']) ?></h1>
+<div class="container play-layout">
+    <section class="panel accent-purple scene">
+        <?php if (!empty($node['date'])): ?><p class="eyebrow pixel"><?= e($node['date']) ?></p><?php endif; ?>
+        <h1 class="room-title"><?= e($node['title']) ?></h1>
 
         <?php if ($state['notice']): ?>
-            <p class="notice"><?= e($state['notice']) ?></p>
+            <p class="notice"><?= icon('dice') ?> <?= e($state['notice']) ?></p>
         <?php endif; ?>
 
         <div class="prose narrative">
@@ -19,19 +20,19 @@ $endingTitle = ['victory' => 'Vitória', 'survived' => 'Você sobreviveu', 'defe
             <div class="ending ending-<?= e($ending) ?>">
                 <h2><?= e($endingTitle[$ending]) ?></h2>
                 <p>Você chegou ao fim em <?= (int) $state['steps'] ?> decisões.</p>
-                <form method="post" action="/aventuras/<?= e($story['id']) ?>/reiniciar">
+                <form class="form-actions" method="post" action="<?= url($base . '/reiniciar') ?>">
                     <?= csrf_field() ?>
-                    <button class="btn">Jogar de novo</button>
-                    <a class="btn btn-ghost" href="/aventuras">Outras aventuras</a>
+                    <button class="btn" type="submit">Jogar de novo</button>
+                    <a class="btn btn-ghost" href="<?= url('/aventuras') ?>">Outras aventuras</a>
                 </form>
             </div>
         <?php else: ?>
-            <form method="post" action="/aventuras/<?= e($story['id']) ?>/escolher" class="choices">
+            <form method="post" action="<?= url($base . '/escolher') ?>" class="choices">
                 <?= csrf_field() ?>
                 <?php foreach ($choices as $choice): ?>
                     <button class="choice" name="choice" value="<?= (int) $choice['index'] ?>" <?= $choice['available'] ? '' : 'disabled' ?>>
                         <span><?= e($choice['text']) ?></span>
-                        <?php if ($choice['risky']): ?><small class="risk">🎲 teste</small><?php endif; ?>
+                        <?php if ($choice['risky']): ?><small class="risk pixel">teste de dados</small><?php endif; ?>
                         <?php if (!$choice['available']): ?><small><?= e($choice['reason']) ?></small><?php endif; ?>
                     </button>
                 <?php endforeach; ?>
@@ -39,7 +40,7 @@ $endingTitle = ['victory' => 'Vitória', 'survived' => 'Você sobreviveu', 'defe
         <?php endif; ?>
     </section>
 
-    <aside class="sheet" aria-label="Ficha do personagem">
+    <aside class="panel sheet accent-purple" aria-label="Ficha do personagem">
         <h2>Ficha</h2>
         <?php foreach ($story['stats'] as $key => $def): $value = $state['stats'][$key]; $max = $def['max'] ?? max($value, 1); ?>
             <div class="stat">
@@ -54,9 +55,8 @@ $endingTitle = ['victory' => 'Vitória', 'survived' => 'Você sobreviveu', 'defe
             <p class="muted">Vazio.</p>
         <?php endif; ?>
         <?php if (!$ending): ?>
-            <form method="post" action="/aventuras/<?= e($story['id']) ?>/reiniciar" onsubmit="return confirm('Recomeçar e perder o progresso?')">
-                <?= csrf_field() ?>
-                <button class="link-button">Recomeçar</button>
+            <form method="post" action="<?= url($base . '/reiniciar') ?>" data-confirm="Recomeçar e perder o progresso?">
+                <?= csrf_field() ?><button class="link-button" type="submit">Recomeçar</button>
             </form>
         <?php endif; ?>
     </aside>

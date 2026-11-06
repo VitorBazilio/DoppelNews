@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Cria as tabelas (e notícias de exemplo, se vazio) no banco configurado em DB_DSN.
+// Cria as tabelas (e o conteúdo de exemplo, se o banco estiver vazio) no banco configurado em DB_DSN.
 // Uso: php bin/install.php
 
 require dirname(__DIR__) . '/src/bootstrap.php';

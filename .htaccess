@@ -1,0 +1,4 @@
+# Apache/XAMPP/USBWebServer apontando para esta pasta: tudo é servido a partir de public/.
+RewriteEngine On
+RewriteRule ^$ public/ [L]
+RewriteRule ^((?!public/).*)$ public/$1 [L]

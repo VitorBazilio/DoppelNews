@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// Cria um administrador, ou promove uma conta existente.
 // Uso: php bin/create-admin.php "Nome" email@exemplo.com senha-com-8-ou-mais
 
 require dirname(__DIR__) . '/src/bootstrap.php';
@@ -16,9 +17,11 @@ if (!$name || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen((string) $pas
 }
 
 $repo = new UserRepository();
-if ($repo->findByEmail($email) !== null) {
-    fwrite(STDERR, "Já existe um usuário com esse e-mail.\n");
-    exit(1);
+$existing = $repo->findByEmail($email);
+if ($existing !== null) {
+    $repo->setRole((int) $existing['id'], 'admin');
+    echo "Conta existente promovida a administrador: $email\n";
+    exit(0);
 }
 
 $repo->create($name, $email, $password, 'admin');

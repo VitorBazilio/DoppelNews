@@ -1,55 +1,54 @@
 # Doppel
 
-Portal de notícias geek **e** plataforma de aventuras de RPG em formato de livro-jogo, ambientadas em momentos históricos (Primeira Guerra Mundial, Roma Antiga…).
+Portal de notícias geek **e** plataforma de RPG de mesa: salas com chat e dados, personagens de D&D 5ª edição, ranking, regras e aventuras em livro-jogo.
 
-> Primeiro projeto criado pelos programadores **Vitor** e **Felipe**, na época do TCC do ensino médio.
+> Primeiro projeto dos programadores **Vitor Bazilio**, **Felipe Antenori** e **Willberson Laurentino**, criado no TCC do ensino médio. Esta versão 3.0 junta o visual do TCC original com o código limpo da versão DoppelNews.
+
+## O que o site faz
+
+| Área | Funções |
+|---|---|
+| **News** | Carrossel de destaques, editorias (Games, Anime, Hqs, Manga, RPG, História), busca, paginação, página da notícia com posts recentes e compartilhamento |
+| **Salas** | Criar mesa (você vira o mestre), listar por Novas/Populares/Mestres, Sorte (sala aleatória com vaga), chat em tempo real, rolagem de dados (`d20`, `2d6+3`, `/r 1d8-1`), mestre dá pontos de ranking |
+| **Personagens** | Criação por sala com compra de pontos (27 pontos, regras do Livro do Jogador), bônus de espécie, PV pelo dado de vida, perícias; ranking, recentes, meus e ficha de exemplo |
+| **Regras** | Compêndio público de classes, espécies, armas e magias |
+| **Aventuras** | Livros-jogo históricos (Somme 1916, Idos de Março) com testes de 2d6; funciona sem conta |
+| **Ajuda** | Livros de D&D em PDF, como jogar, perguntas frequentes e contato |
+| **Conta** | Cadastro/login (modal ou página), perfil com personagens, salas e aventuras; troca de nick e senha |
+| **Painel** (admin) | Notícias (criar, editar, excluir, destaque no carrossel, upload convertido para WebP), usuários (promover/excluir) e regras de D&D |
 
 ## Rodando localmente (Windows)
 
-Requisito: PHP 8.1+ instalado e no PATH.
+Requisito: PHP 8.1+ no PATH.
 
-1. Dê dois cliques em **`iniciar.bat`** (ou rode `iniciar.bat` no terminal).
-2. Abra http://localhost:8000.
-3. Crie um administrador (uma vez): `php bin/create-admin.php "Seu Nome" voce@exemplo.com suasenha123`
-   (se o PHP reclamar de driver, rode com `-d extension=pdo_sqlite -d extension=sqlite3`).
+1. Dê dois cliques em **`iniciar.bat`** e abra http://localhost:8000.
+2. Crie o administrador (uma vez):
+   `php -d extension=pdo_sqlite bin/create-admin.php "Seu Nome" voce@exemplo.com suasenha123`
 
-O banco SQLite (`storage/doppel.sqlite`) é criado sozinho, com notícias de exemplo.
+O banco SQLite (`storage/doppel.sqlite`) é criado sozinho, com notícias e regras de exemplo.
 
-## Publicando na Vercel
+Também roda em Apache (XAMPP, USBWebServer): aponte para esta pasta; o `.htaccess` encaminha tudo para `public/`.
 
-A Vercel não roda PHP nativamente: usamos o runtime comunitário [`vercel-php`](https://github.com/juicyfx/vercel-php) (configurado em `vercel.json`). Como o disco da Vercel é temporário, **é preciso um MySQL externo** (ex.: TiDB Cloud, Aiven, Railway). As sessões já são guardadas no banco automaticamente.
+## MySQL e Vercel
 
-1. Crie um banco MySQL na nuvem e anote host, banco, usuário e senha.
-2. Na máquina local, crie um `.env` (modelo em `.env.example`) com `DB_DSN`, `DB_USER`, `DB_PASS` e, se o provedor exigir TLS, `DB_SSL_CA` apontando para o bundle de CAs.
-3. Rode `php bin/install.php` (cria as tabelas) e `php bin/create-admin.php ...` (cria o admin) contra esse banco.
-4. Suba o projeto no GitHub e importe na Vercel. Em **Settings → Environment Variables** cadastre as mesmas variáveis (`DB_DSN`, `DB_USER`, `DB_PASS`, `DB_SSL_CA`).
-5. Deploy. Imagens de notícias no painel devem ser informadas por **URL https** (a Vercel não guarda uploads).
+Copie `.env.example` para `.env` e preencha `DB_DSN`, `DB_USER` e `DB_PASS`. Depois rode `php bin/install.php`.
+Na Vercel (runtime `vercel-php`, já configurado em `vercel.json`) use um MySQL externo; as sessões vão para o banco automaticamente e as imagens das notícias devem ser informadas por URL `https://`.
 
 ## Estrutura
 
 ```
-public/        diretório exposto (index.php = roteador, assets/)
-api/index.php  ponto de entrada da Vercel
-src/Controller controllers finos (um por área)
-src/Repository acesso a dados com PDO + prepared statements
-src/Story      motor do livro-jogo (Gamebook) e carregamento das aventuras
-src/Support    config, banco, sessão, auth, CSRF, roteador, view, helpers
-templates/     views PHP (layout + páginas)
-stories/       aventuras em JSON
-database/      esquemas SQLite/MySQL e notícias de exemplo
-bin/           scripts de linha de comando
+public/          raiz do site (index.php = rotas, assets/ css, js, imagens WebP, fontes, livros)
+src/Controller   controllers finos (Admin/ para o painel)
+src/Repository   acesso a dados com PDO e consultas parametrizadas
+src/Rpg          regras puras: Dice (rolagens) e CharacterRules (compra de pontos, PV, perícias)
+src/Story        motor do livro-jogo
+src/Support      config, banco, sessão, auth, CSRF, roteador, view, upload, helpers
+templates/       views PHP (layout + páginas)
+database/        esquemas SQLite/MySQL e dados iniciais (seed/)
+stories/         aventuras em JSON (valide com php bin/check-stories.php)
+bin/             scripts de linha de comando
 ```
-
-## Criando uma aventura
-
-Crie `stories/minha-aventura.json` seguindo o formato de `stories/idos-de-marco-44ac.json`:
-
-- `stats`: atributos (`lethal: true` = fim de jogo ao chegar a 0).
-- `nodes`: cenas com `text`, `choices` e, opcionalmente, `effects`, `ending` (`victory`, `survived`, `defeat`).
-- Escolha: `requires` (atributo/item), `effects` (`stats`, `items`, `remove`) e `check` (teste 2d6 + atributo contra `target`; falha vai para `fail`).
-
-Valide com `php bin/check-stories.php`.
 
 ## Segurança
 
-Senhas com `password_hash`, consultas parametrizadas, CSRF em todos os POSTs, saída escapada, upload validado por conteúdo e limite de tentativas de login.
+Senhas com `password_hash`, consultas parametrizadas, CSRF em todos os POSTs, saída escapada, upload validado pelo conteúdo, limite de tentativas de login e permissões checadas no servidor (só o mestre pontua e exclui a sala; só o dono, o mestre ou um admin removem um personagem).

@@ -29,10 +29,28 @@ final class Database
 
             self::$pdo = new PDO($dsn, Config::get('DB_USER') ?: null, Config::get('DB_PASS') ?: null, $options);
 
+            if (self::$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+                self::$pdo->exec('PRAGMA foreign_keys = ON');
+            }
             if ($isNewSqlite) {
                 Installer::run(self::$pdo);
             }
         }
         return self::$pdo;
+    }
+
+    /** Executa $work dentro de uma transação, desfazendo tudo se algo falhar. */
+    public static function transaction(callable $work): mixed
+    {
+        $pdo = self::pdo();
+        $pdo->beginTransaction();
+        try {
+            $result = $work($pdo);
+            $pdo->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 }

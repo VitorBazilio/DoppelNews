@@ -18,13 +18,14 @@ spl_autoload_register(static function (string $class): void {
 require __DIR__ . '/Support/helpers.php';
 
 date_default_timezone_set('America/Sao_Paulo');
+mb_internal_encoding('UTF-8');
 
 Doppel\Support\Config::load(ROOT . '/.env');
 
 ini_set('display_errors', Doppel\Support\Config::bool('APP_DEBUG') ? '1' : '0');
 error_reporting(E_ALL);
 
-if (session_status() === PHP_SESSION_NONE) {
+if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
     if (Doppel\Support\Config::bool('DB_SESSIONS') || getenv('VERCEL') !== false) {
         session_set_save_handler(new Doppel\Support\DatabaseSessionHandler(), true);
     }

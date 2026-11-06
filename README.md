@@ -2,44 +2,38 @@
 
 Portal de notícias geek **e** plataforma de aventuras de RPG em formato de livro-jogo, ambientadas em momentos históricos (Primeira Guerra Mundial, Roma Antiga…).
 
-## Rodando
+> Primeiro projeto criado pelos programadores **Vitor** e **Felipe**, na época do TCC do ensino médio.
 
-Requisitos: PHP 8.1+ com `pdo_sqlite` (padrão) ou `pdo_mysql`.
+## Rodando localmente (Windows)
 
-```powershell
-./run.ps1                      # http://localhost:8000
-# ou, com PHP configurado:
-php -S localhost:8000 -t public public/index.php
-```
+Requisito: PHP 8.1+ instalado e no PATH.
 
-Na primeira execução o banco SQLite (`storage/doppel.sqlite`) é criado e populado com notícias de exemplo.
+1. Dê dois cliques em **`iniciar.bat`** (ou rode `iniciar.bat` no terminal).
+2. Abra http://localhost:8000.
+3. Crie um administrador (uma vez): `php bin/create-admin.php "Seu Nome" voce@exemplo.com suasenha123`
+   (se o PHP reclamar de driver, rode com `-d extension=pdo_sqlite -d extension=sqlite3`).
 
-Criar um administrador (acesso ao painel `/admin`):
+O banco SQLite (`storage/doppel.sqlite`) é criado sozinho, com notícias de exemplo.
 
-```
-php bin/create-admin.php "Seu Nome" voce@exemplo.com suasenha123
-```
+## Publicando na Vercel
 
-### MySQL
+A Vercel não roda PHP nativamente: usamos o runtime comunitário [`vercel-php`](https://github.com/juicyfx/vercel-php) (configurado em `vercel.json`). Como o disco da Vercel é temporário, **é preciso um MySQL externo** (ex.: TiDB Cloud, Aiven, Railway). As sessões já são guardadas no banco automaticamente.
 
-Crie um arquivo `.env` na raiz:
-
-```
-DB_DSN=mysql:host=127.0.0.1;dbname=doppel;charset=utf8mb4
-DB_USER=usuario
-DB_PASS=senha
-```
-
-e rode `php -r "require 'src/bootstrap.php'; Doppel\Support\Installer::run(Doppel\Support\Database::pdo());"` uma vez para criar as tabelas. Use `APP_DEBUG=1` para ver erros em desenvolvimento.
+1. Crie um banco MySQL na nuvem e anote host, banco, usuário e senha.
+2. Na máquina local, crie um `.env` (modelo em `.env.example`) com `DB_DSN`, `DB_USER`, `DB_PASS` e, se o provedor exigir TLS, `DB_SSL_CA` apontando para o bundle de CAs.
+3. Rode `php bin/install.php` (cria as tabelas) e `php bin/create-admin.php ...` (cria o admin) contra esse banco.
+4. Suba o projeto no GitHub e importe na Vercel. Em **Settings → Environment Variables** cadastre as mesmas variáveis (`DB_DSN`, `DB_USER`, `DB_PASS`, `DB_SSL_CA`).
+5. Deploy. Imagens de notícias no painel devem ser informadas por **URL https** (a Vercel não guarda uploads).
 
 ## Estrutura
 
 ```
-public/        único diretório exposto (index.php = roteador, assets/, uploads/)
+public/        diretório exposto (index.php = roteador, assets/)
+api/index.php  ponto de entrada da Vercel
 src/Controller controllers finos (um por área)
 src/Repository acesso a dados com PDO + prepared statements
 src/Story      motor do livro-jogo (Gamebook) e carregamento das aventuras
-src/Support    config, banco, auth, CSRF, roteador, view, helpers
+src/Support    config, banco, sessão, auth, CSRF, roteador, view, helpers
 templates/     views PHP (layout + páginas)
 stories/       aventuras em JSON
 database/      esquemas SQLite/MySQL e notícias de exemplo
@@ -54,8 +48,8 @@ Crie `stories/minha-aventura.json` seguindo o formato de `stories/idos-de-marco-
 - `nodes`: cenas com `text`, `choices` e, opcionalmente, `effects`, `ending` (`victory`, `survived`, `defeat`).
 - Escolha: `requires` (atributo/item), `effects` (`stats`, `items`, `remove`) e `check` (teste 2d6 + atributo contra `target`; falha vai para `fail`).
 
-Valide com `php bin/check-stories.php` (detecta destinos quebrados, becos sem saída e cenas inalcançáveis).
+Valide com `php bin/check-stories.php`.
 
 ## Segurança
 
-Senhas com `password_hash`, consultas parametrizadas, proteção CSRF em todos os POSTs, saída sempre escapada, upload de imagens validado por conteúdo e limite de tentativas de login.
+Senhas com `password_hash`, consultas parametrizadas, CSRF em todos os POSTs, saída escapada, upload validado por conteúdo e limite de tentativas de login.

@@ -25,8 +25,8 @@ $base = $category ? '/?categoria=' . urlencode($category) . '&' : '/?';
 <?php endif; ?>
 
 <div class="news-grid">
-    <?php foreach ($result['items'] as $item): $img = news_image($item['image']); ?>
-        <article class="card">
+    <?php foreach ($result['items'] as $i => $item): $img = news_image($item['image']); ?>
+        <article class="card<?= $featured && $category === null && $result['page'] === 1 && $i === 0 ? ' card-featured' : '' ?>">
             <a class="card-media" href="/noticias/<?= (int) $item['id'] ?>" tabindex="-1" aria-hidden="true">
                 <?php if ($img): ?>
                     <img src="<?= e($img) ?>" alt="" loading="lazy" width="640" height="360">

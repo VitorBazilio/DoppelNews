@@ -9,6 +9,7 @@ $endingLabel = ['victory' => 'Vitória', 'survived' => 'Sobreviveu', 'defeat' =>
 <div class="story-grid">
     <?php foreach ($stories as $id => $story): $run = $runs[$id] ?? null; ?>
         <article class="card story-card">
+            <div class="story-banner" aria-hidden="true"><span><?= abs((int) $story['year']) ?></span><small><?= $story['year'] < 0 ? 'a.C.' : 'd.C.' ?></small></div>
             <div class="card-body">
                 <p class="meta"><span class="tag"><?= e($story['era']) ?></span> <?= e($story['duration']) ?></p>
                 <h2><a href="/aventuras/<?= e($id) ?>"><?= e($story['title']) ?></a></h2>
